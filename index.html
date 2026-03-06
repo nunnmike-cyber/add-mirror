@@ -1,0 +1,1299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Do I Have ADHD? — Free Self-Assessment</title>
+  <meta name="description" content="A free, clinically-informed ADHD self-assessment that goes beyond standard checklists — including masking, emotional experience, functional impact, and differential screening.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: 'Lora', Georgia, serif; }
+    button { outline: none; }
+    button:focus-visible { outline: 2px solid #C4581A; outline-offset: 2px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+
+
+const COLORS = {
+  cream: "#F9F5EE",
+  paper: "#F2EBD9",
+  warm: "#E8DCC8",
+  ink: "#1A1410",
+  inkLight: "#3D2E22",
+  accent: "#C4581A",
+  accentLight: "#E8885A",
+  accentPale: "#F5DDD0",
+  teal: "#2A6B6B",
+  tealLight: "#5AABAB",
+  tealPale: "#D0ECEC",
+  muted: "#8A7A68",
+  mutedLight: "#B5A48E",
+};
+
+// ─── SCORING CONFIGURATION ───────────────────────────────────────────
+// Questions that map closest to ASRS Part A (highest clinical predictors)
+const PART_A_QUESTIONS = ["a1", "a4", "a5", "a6", "a7", "e1", "e5"];
+
+// Threshold: if a Part A question is answered 3 (Often) or 4 (Always), it counts as a "hit"
+const PART_A_HIT_THRESHOLD = 3;
+
+// Number of Part A hits needed for a strong positive screen
+const PART_A_POSITIVE_SCREEN = 4;
+
+// Core signal weights — grounded in adult ADHD predictive validity research
+// Inattentive items are the strongest adult predictors (Kessler et al. 2005, 2007)
+// Executive dysfunction is among the most impairing (Barkley 2011)
+// Hyperactive/impulsive less predictive in adults but still relevant
+// Emotional dysregulation supported by Barkley as core but not in DSM
+// Hyperfocus helps differentiate ADHD from other attention difficulties
+const CORE_SIGNAL_WEIGHTS = {
+  inattentive: 0.40,
+  executive: 0.20,
+  hyperactive_impulsive: 0.20, // combined H+I cluster
+  emotional: 0.10,
+  hyperfocus: 0.10,
+};
+
+// Which questions feed into the core signal (excludes masking entirely)
+const CORE_SIGNAL_QUESTIONS = {
+  inattentive: ["c1", "c4", "c5", "a1", "a2", "a3", "a4", "a5", "a6", "a7"],
+  executive: ["em4", "em5"],
+  hyperactive_impulsive: ["c2", "c3", "e1", "e2", "e3", "e4", "e5", "e6"],
+  emotional: ["em1", "em2"], // em6 (justice sensitivity) excluded — weak clinical signal
+  hyperfocus: ["c6", "em3"],
+};
+
+// Masking questions — used only as a modifier, never in core signal
+const MASKING_QUESTIONS = ["m1", "m2", "m3", "m4", "m5"];
+
+// ─── SCORING FUNCTIONS ───────────────────────────────────────────────
+
+function calculateClusterPercentages(answers, allQuestions) {
+  const clusters = {};
+  allQuestions.forEach((q) => {
+    if (!clusters[q.cluster]) clusters[q.cluster] = { total: 0, max: 0 };
+    clusters[q.cluster].total += answers[q.id] ?? 0;
+    clusters[q.cluster].max += 4;
+  });
+  const pct = {};
+  Object.keys(clusters).forEach((k) => {
+    pct[k] = clusters[k].max > 0 ? Math.round((clusters[k].total / clusters[k].max) * 100) : 0;
+  });
+  return pct;
+}
+
+function calculateCoreSignal(answers) {
+  // Calculate weighted percentage for each core cluster
+  const clusterScores = {};
+  for (const [cluster, questionIds] of Object.entries(CORE_SIGNAL_QUESTIONS)) {
+    let total = 0;
+    let max = 0;
+    questionIds.forEach((qid) => {
+      total += answers[qid] ?? 0;
+      max += 4;
+    });
+    clusterScores[cluster] = max > 0 ? (total / max) * 100 : 0;
+  }
+
+  // Weighted combination
+  let coreSignal = 0;
+  for (const [cluster, weight] of Object.entries(CORE_SIGNAL_WEIGHTS)) {
+    coreSignal += (clusterScores[cluster] || 0) * weight;
+  }
+
+  return Math.round(coreSignal);
+}
+
+function calculatePartAScreen(answers) {
+  // Count how many Part A items score at or above threshold
+  let hits = 0;
+  PART_A_QUESTIONS.forEach((qid) => {
+    if ((answers[qid] ?? 0) >= PART_A_HIT_THRESHOLD) {
+      hits += 1;
+    }
+  });
+  return {
+    hits,
+    total: PART_A_QUESTIONS.length,
+    positive: hits >= PART_A_POSITIVE_SCREEN,
+  };
+}
+
+function calculateMaskingModifier(answers) {
+  let total = 0;
+  let max = 0;
+  MASKING_QUESTIONS.forEach((qid) => {
+    total += answers[qid] ?? 0;
+    max += 4;
+  });
+  const maskingPct = max > 0 ? Math.round((total / max) * 100) : 0;
+
+  // Masking adjusts interpretation upward — compensating for score suppression
+  // Formula: boost = (100 - coreSignal) * modifier
+  // This scales proportionally: a moderate scorer gets more absolute lift than a high scorer
+  let modifier = 0;
+  let level = "low";
+  if (maskingPct >= 70) { modifier = 0.15; level = "high"; }
+  else if (maskingPct >= 50) { modifier = 0.08; level = "moderate"; }
+
+  return { maskingPct, modifier, level };
+}
+
+function calculateChildhoodGate(answers) {
+  // Childhood questions: c1–c6
+  const childIds = ["c1", "c2", "c3", "c4", "c5", "c6"];
+  let total = 0;
+  let max = 0;
+  childIds.forEach((qid) => {
+    total += answers[qid] ?? 0;
+    max += 4;
+  });
+  const pct = max > 0 ? Math.round((total / max) * 100) : 0;
+  return { pct, low: pct < 25 };
+}
+
+function calculateFullScore(answers) {
+  const coreSignal = calculateCoreSignal(answers);
+  const partA = calculatePartAScreen(answers);
+  const masking = calculateMaskingModifier(answers);
+  const childhood = calculateChildhoodGate(answers);
+
+  // Apply masking modifier
+  const adjustedScore = Math.round(coreSignal + (100 - coreSignal) * masking.modifier);
+
+  // Determine likelihood — driven by Part A threshold + adjusted score
+  let likelihood = "Low";
+  if (partA.positive && adjustedScore >= 55) {
+    likelihood = "High";
+  } else if (partA.positive || adjustedScore >= 55) {
+    likelihood = "High";
+  } else if (partA.hits >= 3 || adjustedScore >= 40) {
+    likelihood = "Moderate";
+  }
+
+  // Override: if childhood gate is low AND adult score is high, flag but don't auto-downgrade
+  const childhoodCaveat = childhood.low && adjustedScore >= 50;
+
+  return {
+    coreSignal,
+    adjustedScore,
+    partA,
+    masking,
+    childhood,
+    likelihood,
+    childhoodCaveat,
+    maskingApplied: masking.modifier > 0,
+    maskingBoost: adjustedScore - coreSignal,
+  };
+}
+
+// ─── IMPAIRMENT & DIFFERENTIAL SCORING ───────────────────────────────
+
+const IMPAIRMENT_QUESTIONS = ["imp1", "imp2", "imp3", "imp4", "imp5"];
+
+const DIFFERENTIAL_ITEMS = {
+  anxiety: { questions: ["d1"], label: "Anxiety", desc: "Anxiety can cause restlessness, poor concentration, and difficulty finishing tasks — all of which overlap heavily with ADHD. They also frequently co-occur." },
+  depression: { questions: ["d2"], label: "Depression", desc: "Low mood, low motivation, and 'brain fog' from depression can look very similar to inattentive ADHD. Depression is also one of the most common conditions that co-exists with ADHD." },
+  sleep: { questions: ["d3"], label: "Sleep difficulties", desc: "Poor sleep alone can produce most ADHD-like symptoms — difficulty concentrating, impulsivity, emotional reactivity, and memory problems. Many people with ADHD also have sleep disorders." },
+  burnout: { questions: ["d4"], label: "Burnout / exhaustion", desc: "Chronic exhaustion impairs executive function, working memory, and emotional regulation in ways that closely mimic ADHD — and burnout is also very common in people who have undiagnosed ADHD." },
+  onset: { questions: ["d5"], label: "Stress-linked onset", desc: "If your focus problems started or worsened after a stressful period, it's worth considering whether trauma, grief, or chronic stress could be a factor — either instead of, or in addition to, ADHD." },
+};
+
+function calculateImpairment(answers) {
+  let total = 0;
+  let max = 0;
+  IMPAIRMENT_QUESTIONS.forEach((qid) => {
+    total += answers[qid] ?? 0;
+    max += 4;
+  });
+  const pct = max > 0 ? Math.round((total / max) * 100) : 0;
+  let level = "low";
+  if (pct >= 65) level = "significant";
+  else if (pct >= 40) level = "moderate";
+  return { pct, level };
+}
+
+function calculateDifferential(answers) {
+  const flags = [];
+  for (const [key, item] of Object.entries(DIFFERENTIAL_ITEMS)) {
+    let total = 0;
+    let max = 0;
+    item.questions.forEach((qid) => {
+      total += answers[qid] ?? 0;
+      max += 4;
+    });
+    const score = answers[item.questions[0]] ?? 0;
+    // Flag if answered "Often" (3) or "Always" (4)
+    if (score >= 3) {
+      flags.push({ key, label: item.label, desc: item.desc, score });
+    }
+  }
+  return flags;
+}
+
+// ─── SECTIONS & QUESTIONS ────────────────────────────────────────────
+
+const SECTIONS = [
+  {
+    id: "intro",
+    type: "intro",
+  },
+  {
+    id: "context",
+    type: "context",
+    title: "Before we begin",
+    subtitle: "A few quick things to help us personalise your results",
+  },
+  {
+    id: "childhood",
+    type: "questions",
+    label: "PART ONE",
+    title: "Growing Up",
+    subtitle: "Think back to before you were 12. Try to remember how things felt then, not how you think they \"should\" have been.",
+    questions: [
+      { id: "c1", text: "As a child, I was often described as 'spacey', 'in my own world', or daydreaming", cluster: "inattentive" },
+      { id: "c2", text: "I struggled to sit still, often fidgeting, tapping, or feeling restless", cluster: "hyperactive" },
+      { id: "c3", text: "I would blurt things out, act before thinking, or have trouble waiting my turn", cluster: "impulsive" },
+      { id: "c4", text: "I had difficulty finishing homework, chores, or tasks — even when I really wanted to", cluster: "inattentive" },
+      { id: "c5", text: "I lost things constantly (toys, school supplies, belongings) or forgot them", cluster: "inattentive" },
+      { id: "c6", text: "When something excited me, I could focus on it for hours — but 'boring' things felt impossible", cluster: "hyperfocus" },
+    ],
+  },
+  {
+    id: "present_attention",
+    type: "questions",
+    label: "PART TWO",
+    title: "Focus & Attention",
+    subtitle: "Think about the past 6 months. How often do these things happen to you?",
+    questions: [
+      { id: "a1", text: "I start tasks but struggle to see them through to the end", cluster: "inattentive" },
+      { id: "a2", text: "I miss details or make careless mistakes, even in things I care about", cluster: "inattentive" },
+      { id: "a3", text: "My mind wanders during conversations, meetings, or while reading", cluster: "inattentive" },
+      { id: "a4", text: "I struggle to organise tasks, projects, or belongings", cluster: "inattentive" },
+      { id: "a5", text: "I lose things I need regularly (keys, phone, wallet, documents)", cluster: "inattentive" },
+      { id: "a6", text: "I avoid tasks that require sustained mental effort, even when they matter to me", cluster: "inattentive" },
+      { id: "a7", text: "I forget appointments, commitments, or things I've promised to do — even important ones", cluster: "inattentive" },
+    ],
+  },
+  {
+    id: "present_energy",
+    type: "questions",
+    label: "PART THREE",
+    title: "Energy & Impulse",
+    subtitle: "Still thinking about the past 6 months...",
+    questions: [
+      { id: "e1", text: "I feel restless or 'driven by a motor' — an internal hum that's hard to switch off", cluster: "hyperactive" },
+      { id: "e2", text: "I talk more than others, interrupt, or finish people's sentences", cluster: "impulsive" },
+      { id: "e3", text: "I act on impulse — buying things, saying things, making decisions before fully thinking", cluster: "impulsive" },
+      { id: "e4", text: "I find it hard to wait — in queues, in conversations, for anything", cluster: "impulsive" },
+      { id: "e5", text: "Even when sitting still, my mind races or I fidget internally", cluster: "hyperactive" },
+      { id: "e6", text: "I do risky or exciting things just to feel something, or to escape boredom", cluster: "impulsive" },
+    ],
+  },
+  {
+    id: "masking",
+    type: "questions",
+    label: "PART FOUR",
+    title: "Coping & Masking",
+    subtitle: "This section matters a lot — especially for people who've learned to 'pass' as neurotypical. Be honest with yourself.",
+    questions: [
+      { id: "m1", text: "I work much harder than others seem to, just to achieve the same results", cluster: "masking" },
+      { id: "m2", text: "By the end of the day, I feel exhausted from the effort of appearing 'normal' or 'on top of things'", cluster: "masking" },
+      { id: "m3", text: "I've developed elaborate systems (lists, alarms, rituals) to manage what others seem to do effortlessly", cluster: "masking" },
+      { id: "m4", text: "I feel like I'm hiding something — that if people knew how chaotic my inner world was, they'd be surprised", cluster: "masking" },
+      { id: "m5", text: "I've been told I'm 'so organised' or 'so capable' — when underneath, I'm barely holding it together", cluster: "masking" },
+    ],
+  },
+  {
+    id: "emotional",
+    type: "questions",
+    label: "PART FIVE",
+    title: "Emotions & Relationships",
+    subtitle: "ADHD affects far more than just attention. These experiences are often overlooked.",
+    questions: [
+      { id: "em1", text: "I feel emotions more intensely than other people seem to — highs and lows hit hard", cluster: "emotional" },
+      { id: "em2", text: "Criticism — even mild — can feel devastating and stay with me for hours or days", cluster: "emotional" },
+      { id: "em3", text: "I get deeply absorbed in things I love (hyperfocus) and lose all track of time", cluster: "hyperfocus" },
+      { id: "em4", text: "I struggle with time — always running late, misjudging how long things take", cluster: "executive" },
+      { id: "em5", text: "I procrastinate — not out of laziness, but from something that feels like paralysis", cluster: "executive" },
+      { id: "em6", text: "I have a strong sense of justice and feel deeply bothered by unfairness", cluster: "emotional" },
+    ],
+  },
+  {
+    id: "impact",
+    type: "questions",
+    label: "PART SIX",
+    title: "How Much Does It Affect You?",
+    subtitle: "ADHD isn't just about symptoms — it's about how much they get in the way of your life. Think about the past 6 months.",
+    questions: [
+      { id: "imp1", text: "These difficulties have affected my performance at work or school", cluster: "impairment" },
+      { id: "imp2", text: "These difficulties have caused problems in my close relationships (partner, family, friends)", cluster: "impairment" },
+      { id: "imp3", text: "These difficulties have affected my ability to manage money, paperwork, or household responsibilities", cluster: "impairment" },
+      { id: "imp4", text: "These difficulties make me feel bad about myself — frustrated, ashamed, or like I'm underperforming", cluster: "impairment" },
+      { id: "imp5", text: "I feel like I'm not living up to my potential because of these difficulties", cluster: "impairment" },
+    ],
+  },
+  {
+    id: "differential",
+    type: "questions",
+    label: "PART SEVEN",
+    title: "The Bigger Picture",
+    subtitle: "These questions help us check whether something else — or something additional — might be going on. Many conditions look like ADHD, and many co-occur with it.",
+    questions: [
+      { id: "d1", text: "I frequently feel anxious, worried, or on edge — even when there's no obvious reason", cluster: "diff_anxiety" },
+      { id: "d2", text: "I've felt persistently low, flat, or hopeless for weeks at a time", cluster: "diff_depression" },
+      { id: "d3", text: "I regularly struggle to fall asleep, stay asleep, or wake up feeling rested", cluster: "diff_sleep" },
+      { id: "d4", text: "I feel emotionally or physically exhausted most of the time — like I'm running on empty", cluster: "diff_burnout" },
+      { id: "d5", text: "My focus and concentration problems started or got significantly worse after a stressful or traumatic period", cluster: "diff_onset" },
+    ],
+  },
+  {
+    id: "results",
+    type: "results",
+  },
+];
+
+const FREQUENCY_OPTIONS = [
+  { value: 0, label: "Never" },
+  { value: 1, label: "Rarely" },
+  { value: 2, label: "Sometimes" },
+  { value: 3, label: "Often" },
+  { value: 4, label: "Always" },
+];
+
+const GENDER_OPTIONS = ["Man", "Woman", "Non-binary / other", "Prefer not to say"];
+const AGE_OPTIONS = ["Under 18", "18–25", "26–35", "36–45", "46–55", "56+"];
+
+// ─── UI COMPONENTS ───────────────────────────────────────────────────
+
+function ProgressBar({ current, total }) {
+  const pct = Math.round((current / total) * 100);
+  return (
+    <div style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 100, height: 3, background: COLORS.warm }}>
+      <div style={{ height: "100%", width: `${pct}%`, background: COLORS.accent, transition: "width 0.5s ease" }} />
+    </div>
+  );
+}
+
+function IntroScreen({ onStart }) {
+  return (
+    <div style={{ maxWidth: 680, margin: "0 auto", padding: "60px 24px" }}>
+      <div style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 11, letterSpacing: "0.2em", color: COLORS.accent, textTransform: "uppercase", marginBottom: 32 }}>
+        Free Self-Assessment
+      </div>
+
+      <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: "clamp(42px, 7vw, 72px)", fontWeight: 700, color: COLORS.ink, lineHeight: 1.05, margin: "0 0 32px" }}>
+        Do I have<br />
+        <span style={{ color: COLORS.accent, fontStyle: "italic" }}>ADHD?</span>
+      </h1>
+
+      <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 19, lineHeight: 1.7, color: COLORS.inkLight, marginBottom: 24, maxWidth: 540 }}>
+        This isn't just another checklist. We've built a more honest, more complete assessment — one that asks about masking, emotional experience, and how ADHD presents differently across genders.
+      </p>
+
+      <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 16, lineHeight: 1.7, color: COLORS.muted, marginBottom: 48, maxWidth: 540 }}>
+        It takes about 5 minutes. Your results break down by symptom type, not just a single score. And we'll be honest with you.
+      </p>
+
+      <div style={{ display: "inline-flex", alignItems: "center", gap: 10, background: COLORS.tealPale, border: `1px solid ${COLORS.tealLight}`, borderRadius: 6, padding: "10px 16px", marginBottom: 28 }}>
+        <span style={{ fontSize: 16 }}>🏛️</span>
+        <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 13, color: COLORS.teal, margin: 0, fontWeight: 600 }}>
+          Scoring based on ASRS v1.1 Part A methodology (WHO & Harvard Medical School), with additional research on masking and gender differences
+        </p>
+      </div>
+
+      <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 48 }}>
+        {[
+          { icon: "🔒", text: "Completely private" },
+          { icon: "🧠", text: "Clinically informed" },
+          { icon: "⏱", text: "~5 minutes" },
+        ].map((item) => (
+          <div key={item.text} style={{ display: "flex", alignItems: "center", gap: 8, background: COLORS.paper, border: `1px solid ${COLORS.warm}`, borderRadius: 8, padding: "8px 16px", fontFamily: "'Lora', Georgia, serif", fontSize: 14, color: COLORS.inkLight }}>
+            <span>{item.icon}</span>
+            <span>{item.text}</span>
+          </div>
+        ))}
+      </div>
+
+      <button
+        onClick={onStart}
+        style={{ background: COLORS.accent, color: "#fff", border: "none", borderRadius: 4, padding: "18px 40px", fontFamily: "'Playfair Display', Georgia, serif", fontSize: 18, fontWeight: 600, cursor: "pointer", letterSpacing: "0.02em", transition: "background 0.2s, transform 0.15s" }}
+        onMouseOver={(e) => (e.target.style.background = COLORS.accentLight)}
+        onMouseOut={(e) => (e.target.style.background = COLORS.accent)}
+      >
+        Begin Assessment →
+      </button>
+
+      <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 13, color: COLORS.mutedLight, marginTop: 32, maxWidth: 480, lineHeight: 1.6 }}>
+        <strong>What this can and can't do:</strong> This tool can help you recognise patterns and give you language for experiences you may have struggled to name. It cannot diagnose ADHD — only a qualified clinician can do that after a full assessment. Think of it as a starting point, not a verdict.
+      </p>
+    </div>
+  );
+}
+
+function ContextScreen({ onNext }) {
+  const [gender, setGender] = useState("");
+  const [age, setAge] = useState("");
+  const [diagnosed, setDiagnosed] = useState("");
+  const canContinue = gender && age && diagnosed;
+
+  return (
+    <div style={{ maxWidth: 640, margin: "0 auto", padding: "60px 24px" }}>
+      <div style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 11, letterSpacing: "0.2em", color: COLORS.accent, textTransform: "uppercase", marginBottom: 16 }}>
+        Before We Begin
+      </div>
+      <h2 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 36, fontWeight: 700, color: COLORS.ink, margin: "0 0 12px" }}>
+        A little context
+      </h2>
+      <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 16, color: COLORS.muted, lineHeight: 1.6, marginBottom: 40 }}>
+        ADHD looks different depending on who you are. These answers help us give you more accurate, personalised feedback.
+      </p>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+        <ContextQuestion label="How do you identify?" options={GENDER_OPTIONS} value={gender} onChange={setGender} />
+        <ContextQuestion label="Your age range" options={AGE_OPTIONS} value={age} onChange={setAge} />
+        <ContextQuestion label="Have you ever been diagnosed with ADHD?" options={["No, never", "I suspect I might have it", "Diagnosed as a child", "Diagnosed as an adult"]} value={diagnosed} onChange={setDiagnosed} />
+      </div>
+
+      <button
+        onClick={() => canContinue && onNext({ gender, age, diagnosed })}
+        style={{ marginTop: 48, background: canContinue ? COLORS.accent : COLORS.warm, color: canContinue ? "#fff" : COLORS.mutedLight, border: "none", borderRadius: 4, padding: "16px 36px", fontFamily: "'Playfair Display', Georgia, serif", fontSize: 17, fontWeight: 600, cursor: canContinue ? "pointer" : "not-allowed", transition: "all 0.2s" }}
+      >
+        Continue →
+      </button>
+    </div>
+  );
+}
+
+function ContextQuestion({ label, options, value, onChange }) {
+  return (
+    <div>
+      <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 16, color: COLORS.inkLight, marginBottom: 12, fontWeight: 600 }}>{label}</p>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+        {options.map((opt) => (
+          <button
+            key={opt}
+            onClick={() => onChange(opt)}
+            style={{ padding: "9px 18px", border: `2px solid ${value === opt ? COLORS.accent : COLORS.warm}`, borderRadius: 40, background: value === opt ? COLORS.accentPale : "transparent", color: value === opt ? COLORS.accent : COLORS.inkLight, fontFamily: "'Lora', Georgia, serif", fontSize: 14, cursor: "pointer", transition: "all 0.15s", fontWeight: value === opt ? 600 : 400 }}
+          >
+            {opt}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function QuestionSection({ section, answers, onChange, onNext, onBack, isLast }) {
+  const allAnswered = section.questions.every((q) => answers[q.id] !== undefined);
+
+  return (
+    <div style={{ maxWidth: 680, margin: "0 auto", padding: "60px 24px" }}>
+      <div style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 11, letterSpacing: "0.2em", color: COLORS.accent, textTransform: "uppercase", marginBottom: 12 }}>
+        {section.label}
+      </div>
+      <h2 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 38, fontWeight: 700, color: COLORS.ink, margin: "0 0 10px", lineHeight: 1.1 }}>
+        {section.title}
+      </h2>
+      <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 16, color: COLORS.muted, lineHeight: 1.6, marginBottom: 40, maxWidth: 520 }}>
+        {section.subtitle}
+      </p>
+
+      <div style={{ display: "flex", gap: 4, marginBottom: 16, justifyContent: "flex-end" }}>
+        {FREQUENCY_OPTIONS.map((f) => (
+          <div key={f.value} style={{ flex: 1, textAlign: "center", fontFamily: "'Lora', Georgia, serif", fontSize: 10, color: COLORS.mutedLight, letterSpacing: "0.04em", textTransform: "uppercase" }}>
+            {f.label}
+          </div>
+        ))}
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        {section.questions.map((q, i) => (
+          <QuestionRow key={q.id} question={q} value={answers[q.id]} onChange={(val) => onChange(q.id, val)} index={i} />
+        ))}
+      </div>
+
+      <div style={{ display: "flex", gap: 12, marginTop: 48 }}>
+        <button onClick={onBack} style={{ padding: "14px 28px", border: `2px solid ${COLORS.warm}`, borderRadius: 4, background: "transparent", color: COLORS.muted, fontFamily: "'Lora', Georgia, serif", fontSize: 15, cursor: "pointer" }}>
+          ← Back
+        </button>
+        <button
+          onClick={() => allAnswered && onNext()}
+          style={{ padding: "14px 32px", border: "none", borderRadius: 4, background: allAnswered ? COLORS.accent : COLORS.warm, color: allAnswered ? "#fff" : COLORS.mutedLight, fontFamily: "'Playfair Display', Georgia, serif", fontSize: 16, fontWeight: 600, cursor: allAnswered ? "pointer" : "not-allowed", transition: "all 0.2s", flex: 1 }}
+        >
+          {isLast ? "See My Results →" : "Next →"}
+        </button>
+      </div>
+
+      {!allAnswered && (
+        <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 13, color: COLORS.mutedLight, marginTop: 12, textAlign: "center" }}>
+          Please answer all questions to continue
+        </p>
+      )}
+    </div>
+  );
+}
+
+function QuestionRow({ question, value, onChange, index }) {
+  const [hovered, setHovered] = useState(null);
+
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "14px 16px", background: value !== undefined ? COLORS.accentPale : index % 2 === 0 ? COLORS.paper : "transparent", borderRadius: 6, transition: "background 0.15s", border: `1px solid ${value !== undefined ? COLORS.accentLight + "44" : "transparent"}` }}>
+      <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 15, color: COLORS.inkLight, lineHeight: 1.5, flex: 1, margin: 0, paddingRight: 16 }}>
+        {question.text}
+      </p>
+      <div style={{ display: "flex", gap: 4 }}>
+        {FREQUENCY_OPTIONS.map((opt) => {
+          const selected = value === opt.value;
+          const isHovered = hovered === opt.value;
+          return (
+            <button
+              key={opt.value}
+              onClick={() => onChange(opt.value)}
+              onMouseEnter={() => setHovered(opt.value)}
+              onMouseLeave={() => setHovered(null)}
+              title={opt.label}
+              style={{ width: 32, height: 32, borderRadius: "50%", border: `2px solid ${selected ? COLORS.accent : isHovered ? COLORS.accentLight : COLORS.warm}`, background: selected ? COLORS.accent : isHovered ? COLORS.accentPale : "transparent", cursor: "pointer", transition: "all 0.12s", display: "flex", alignItems: "center", justifyContent: "center" }}
+            >
+              {selected && <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#fff" }} />}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ─── NARRATIVE GENERATION ────────────────────────────────────────────
+
+function generateNarrative(clusterPct, context, scoring, answers) {
+  const {
+    inattentive = 0, hyperactive = 0, impulsive = 0,
+    masking = 0, emotional = 0, executive = 0, hyperfocus = 0
+  } = clusterPct;
+
+  const { likelihood, partA, maskingApplied, maskingBoost, childhoodCaveat, adjustedScore } = scoring;
+
+  // Calculate differential and impairment within narrative
+  const diffFlags = calculateDifferential(answers);
+  const imp = calculateImpairment(answers);
+
+  const isWoman = context.gender === "Woman";
+  const isNonBinary = context.gender === "Non-binary / other";
+  const highMasking = masking >= 60;
+  const highEmotional = emotional >= 60;
+  const highExecutive = executive >= 60;
+  const highHyperfocus = hyperfocus >= 60;
+  const highInattentive = inattentive >= 60;
+  const highHyperactive = hyperactive >= 60;
+  const neverDiagnosed = context.diagnosed === "No, never";
+  const suspectsDiagnosis = context.diagnosed === "I suspect I might have it";
+
+  const parts = [];
+
+  // Opening — tone based on likelihood, now referencing the stronger methodology
+  if (likelihood === "High") {
+    if (highMasking && (isWoman || isNonBinary)) {
+      parts.push("What stands out most in your answers isn't just the symptoms themselves — it's how much energy you appear to spend managing them.");
+    } else if (highMasking) {
+      parts.push("Your results paint a picture of someone who has spent a long time finding ways to cope, often successfully enough that others may never have noticed the effort involved.");
+    } else if (highInattentive && !highHyperactive) {
+      parts.push("Your responses suggest a mind that works differently — one that struggles to find traction on things that don't capture it, while being capable of deep absorption when something does.");
+    } else {
+      parts.push("Across the areas we looked at, your answers align closely with how ADHD typically shows up in adults.");
+    }
+  } else if (likelihood === "Moderate") {
+    parts.push("Your answers tell a mixed story — some areas show a strong pattern, while others are less pronounced — which is actually quite common, and doesn't mean your experiences aren't real.");
+  } else {
+    parts.push("While your results don't strongly point toward ADHD, that doesn't mean everything you're experiencing is simply 'normal' — and it's worth paying attention to the areas where you did score higher.");
+  }
+
+  // Part A screen reference — concrete and clinically grounded
+  if (partA.positive) {
+    parts.push(`On the seven questions most strongly linked to adult ADHD in clinical research, you scored at a significant level on ${partA.hits} of them — which meets the threshold for a positive screen on the WHO's adult ADHD scale.`);
+  } else if (partA.hits >= 3) {
+    parts.push(`You scored at a significant level on ${partA.hits} of the seven questions most strongly linked to adult ADHD — just below the clinical screening threshold, but enough to suggest these difficulties are real and worth taking seriously.`);
+  }
+
+  // Cluster-specific insights
+  if (highInattentive && highHyperactive) {
+    parts.push("You show signs of both the inattentive and hyperactive sides of ADHD — the internal restlessness and the difficulty holding focus can be an exhausting combination, even if it isn't always visible to others.");
+  } else if (highInattentive && !highHyperactive) {
+    parts.push("Your profile leans heavily toward the inattentive presentation — sometimes called ADD — where the struggle isn't so much about energy as it is about finding the mental traction to start, sustain, and finish things.");
+  } else if (highHyperactive && !highInattentive) {
+    parts.push("Your restlessness and impulsivity come through clearly — the kind of internal hum that's hard to explain to people who don't experience it, and that can make stillness feel genuinely uncomfortable.");
+  }
+
+  // Masking modifier — explain the adjustment transparently
+  if (maskingApplied && maskingBoost > 0) {
+    parts.push(`Your high masking score is significant — it suggests your raw symptom scores may understate the real picture, because you've learned to compensate. We've adjusted your overall score upward by ${maskingBoost} points to account for this.`);
+  } else if (highMasking && !maskingApplied) {
+    parts.push("Your masking score is notable — the effort you put into appearing on top of things is real, and it means the full weight of your symptoms may not be visible, even to yourself.");
+  }
+
+  // Emotional / executive callouts
+  if (highEmotional && highExecutive) {
+    parts.push("Two things particularly stand out: the intensity with which you experience emotions, and the executive dysfunction — the paralysis, the time blindness — which is often one of the most impairing aspects of ADHD in adults.");
+  } else if (highEmotional) {
+    parts.push("The emotional intensity you described — the way criticism lands harder, the feeling that your reactions are bigger than the situation — is a genuine and often overlooked part of ADHD that rarely makes it into the standard checklists.");
+  } else if (highExecutive) {
+    parts.push("The executive dysfunction piece — the procrastination that feels like paralysis, the time blindness — came through clearly and is often one of the most impairing aspects of ADHD in adults.");
+  }
+
+  // Childhood caveat
+  if (childhoodCaveat) {
+    parts.push("One thing worth noting: your childhood scores were relatively low compared to your adult scores. This could mean several things — effective early masking, a supportive environment that minimised difficulties, or symptoms that genuinely emerged later — and it's something a professional assessment would explore further.");
+  }
+
+  // Impairment note
+  if (imp.level === "significant" && likelihood === "High") {
+    parts.push("Importantly, these aren't just abstract symptoms — you've described real impact on your work, relationships, or how you feel about yourself, which is exactly what clinicians look for alongside the symptom picture.");
+  } else if (imp.level === "low" && likelihood === "High") {
+    parts.push("Interestingly, while your symptom scores are high, your reported day-to-day impact is lower — which could mean your coping strategies are working hard behind the scenes, or that the impact is showing up in ways that are harder to name.");
+  }
+
+  // Differential note
+  if (diffFlags.length >= 2 && likelihood === "High") {
+    parts.push("It's also worth knowing that you flagged in several areas that commonly co-exist with ADHD — including " + diffFlags.map(f => f.label.toLowerCase()).join(" and ") + ". This doesn't weaken your ADHD result; these conditions frequently travel together, and a thorough assessment will explore all of them.");
+  } else if (diffFlags.length >= 2 && likelihood !== "High") {
+    parts.push("You also flagged in areas beyond ADHD — including " + diffFlags.map(f => f.label.toLowerCase()).join(" and ") + " — which can produce symptoms that look a lot like ADHD. A professional can help work out which pieces of the puzzle are primary.");
+  } else if (diffFlags.length === 1 && likelihood === "Low") {
+    parts.push("Your " + diffFlags[0].label.toLowerCase() + " flag is worth paying attention to — it could be contributing to the focus and energy difficulties you're experiencing, and it deserves its own attention whether or not ADHD is part of the picture.");
+  }
+
+  // Gender-aware closing
+  if ((isWoman || isNonBinary) && highInattentive && neverDiagnosed) {
+    parts.push(`As ${isWoman ? "a woman" : "someone"} who has never been diagnosed, it's worth knowing that inattentive ADHD is systematically underdiagnosed in people who aren't male — often because the symptoms are quieter, better masked, and easier for others (and ourselves) to explain away.`);
+  } else if (highHyperfocus && likelihood !== "Low") {
+    parts.push("The flip side of your attention difficulties also came through — that capacity for deep, absorbing focus when something captures you is real, and often the part of ADHD that people find hardest to believe sits alongside the struggles.");
+  } else if (suspectsDiagnosis && likelihood === "High") {
+    parts.push("If you've suspected this for a while, your instincts appear to have been worth listening to — and these results give you something concrete to take to a professional.");
+  } else if (likelihood === "Low") {
+    parts.push("It may be worth exploring whether anxiety, burnout, or disrupted sleep could be at the root of what you're experiencing — all of which can look remarkably similar to ADHD and deserve just as much attention.");
+  }
+
+  return parts.join(" ");
+}
+
+function usePersonalNarrative(clusterPct, context, scoring, answers) {
+  const [narrative, setNarrative] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const text = generateNarrative(clusterPct, context, scoring, answers);
+      setNarrative(text);
+      setLoading(false);
+    }, 1800);
+    return () => clearTimeout(timer);
+  }, []);
+
+  return { narrative, loading };
+}
+
+function PersonalNarrative({ clusterPct, context, scoring, answers }) {
+  const { narrative, loading } = usePersonalNarrative(clusterPct, context, scoring, answers);
+
+  return (
+    <div style={{ background: COLORS.ink, borderRadius: 12, padding: "36px 40px", marginBottom: 36, position: "relative", overflow: "hidden" }}>
+      <div style={{ position: "absolute", top: 16, left: 24, fontFamily: "'Playfair Display', Georgia, serif", fontSize: 120, lineHeight: 1, color: COLORS.accent, opacity: 0.15, pointerEvents: "none", userSelect: "none" }}>
+        "
+      </div>
+
+      <p style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 11, letterSpacing: "0.2em", color: COLORS.accentLight, textTransform: "uppercase", margin: "0 0 16px" }}>
+        Your Personal Profile
+      </p>
+
+      {loading ? (
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ width: 18, height: 18, borderRadius: "50%", border: `2px solid ${COLORS.accentLight}`, borderTopColor: "transparent", animation: "spin 0.8s linear infinite" }} />
+          <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 15, color: COLORS.mutedLight, margin: 0, fontStyle: "italic" }}>
+            Reading your results carefully…
+          </p>
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        </div>
+      ) : (
+        <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 18, lineHeight: 1.8, color: "#F9F5EE", margin: 0, position: "relative", zIndex: 1 }}>
+          {narrative}
+        </p>
+      )}
+    </div>
+  );
+}
+
+// ─── GP EXPORT ───────────────────────────────────────────────────────
+
+function generateGPExport(clusterPct, scoring, context, typeLabel, impairment, differentialFlags) {
+  const { coreSignal, adjustedScore, partA, masking, likelihood, maskingApplied, maskingBoost, childhoodCaveat } = scoring;
+  const today = new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+
+  const clusterRows = [
+    { label: "Inattention", pct: clusterPct.inattentive || 0, typical: 20 },
+    { label: "Executive Dysfunction", pct: clusterPct.executive || 0, typical: 22 },
+    { label: "Hyperactivity", pct: clusterPct.hyperactive || 0, typical: 18 },
+    { label: "Impulsivity", pct: clusterPct.impulsive || 0, typical: 15 },
+    { label: "Emotional Intensity", pct: clusterPct.emotional || 0, typical: 25 },
+    { label: "Hyperfocus", pct: clusterPct.hyperfocus || 0, typical: 28 },
+    { label: "Masking & Compensation", pct: clusterPct.masking || 0, typical: 20 },
+  ];
+
+  const html = `<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>ADHD Screening Results — GP Summary</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Playfair+Display:wght@400;600;700&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Lora', Georgia, serif; color: #1A1410; background: #fff; padding: 40px; max-width: 700px; margin: 0 auto; }
+  h1 { font-family: 'Playfair Display', Georgia, serif; font-size: 28px; margin-bottom: 4px; }
+  h2 { font-family: 'Playfair Display', Georgia, serif; font-size: 20px; margin: 28px 0 12px; border-bottom: 2px solid #E8DCC8; padding-bottom: 6px; }
+  .subtitle { color: #8A7A68; font-size: 14px; margin-bottom: 24px; }
+  .verdict { background: ${likelihood === "High" ? "#F5DDD0" : likelihood === "Moderate" ? "#FFF3CC" : "#D0ECEC"}; border: 2px solid ${likelihood === "High" ? "#C4581A" : likelihood === "Moderate" ? "#C47A00" : "#2A6B6B"}; border-radius: 8px; padding: 20px 24px; margin-bottom: 24px; }
+  .verdict-label { font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; color: ${likelihood === "High" ? "#C4581A" : likelihood === "Moderate" ? "#C47A00" : "#2A6B6B"}; }
+  .verdict-value { font-family: 'Playfair Display', Georgia, serif; font-size: 36px; font-weight: 700; color: ${likelihood === "High" ? "#C4581A" : likelihood === "Moderate" ? "#C47A00" : "#2A6B6B"}; }
+  .meta { display: flex; gap: 24px; flex-wrap: wrap; margin: 12px 0; }
+  .meta-item { font-size: 13px; color: #3D2E22; }
+  .meta-item strong { font-weight: 700; }
+  table { width: 100%; border-collapse: collapse; margin: 8px 0; }
+  th, td { text-align: left; padding: 8px 12px; font-size: 14px; }
+  th { background: #F2EBD9; font-weight: 700; border-bottom: 2px solid #E8DCC8; }
+  td { border-bottom: 1px solid #E8DCC8; }
+  .high { color: #C4581A; font-weight: 700; }
+  .moderate { color: #C47A00; font-weight: 700; }
+  .low { color: #2A6B6B; }
+  .note { background: #F9F5EE; border: 1px solid #E8DCC8; border-radius: 6px; padding: 14px 18px; margin: 12px 0; font-size: 13px; line-height: 1.6; color: #3D2E22; }
+  .footer { margin-top: 32px; padding-top: 16px; border-top: 1px solid #E8DCC8; font-size: 12px; color: #8A7A68; line-height: 1.6; }
+  @media print { body { padding: 20px; } .no-print { display: none; } }
+</style>
+</head><body>
+<h1>ADHD Screening Results</h1>
+<p class="subtitle">Self-assessment summary for GP review — ${today}</p>
+
+<div class="verdict">
+  <div class="verdict-label">Overall ADHD Likelihood</div>
+  <div class="verdict-value">${likelihood}</div>
+  <div class="meta">
+    <div class="meta-item"><strong>Core signal:</strong> ${coreSignal}%</div>
+    <div class="meta-item"><strong>Adjusted score:</strong> ${adjustedScore}%${maskingApplied ? ` (+${maskingBoost} masking adjustment)` : ""}</div>
+    <div class="meta-item"><strong>Part A screen:</strong> ${partA.hits}/${partA.total} items at threshold (${partA.positive ? "positive" : "sub-threshold"})</div>
+    <div class="meta-item"><strong>Suggested presentation:</strong> ${typeLabel}</div>
+  </div>
+</div>
+
+<h2>Patient Context</h2>
+<div class="meta">
+  <div class="meta-item"><strong>Gender:</strong> ${context.gender || "Not provided"}</div>
+  <div class="meta-item"><strong>Age range:</strong> ${context.age || "Not provided"}</div>
+  <div class="meta-item"><strong>Prior diagnosis:</strong> ${context.diagnosed || "Not provided"}</div>
+</div>
+
+<h2>Cluster Breakdown</h2>
+<table>
+  <tr><th>Cluster</th><th>Score</th><th>Typical adult range</th><th>Status</th></tr>
+  ${clusterRows.map(r => `<tr>
+    <td>${r.label}</td>
+    <td><strong>${r.pct}%</strong></td>
+    <td>~${r.typical}%</td>
+    <td class="${r.pct >= 65 ? "high" : r.pct >= 40 ? "moderate" : "low"}">${r.pct >= 65 ? "Elevated" : r.pct >= 40 ? "Borderline" : "Typical range"}</td>
+  </tr>`).join("")}
+</table>
+
+${maskingApplied ? `<div class="note"><strong>Masking note:</strong> This patient scored ${clusterPct.masking || 0}% on compensation/masking items, suggesting significant effort spent concealing or managing symptoms. Raw symptom scores may underestimate functional impact. The adjusted score includes a ${maskingBoost}-point upward modifier to account for score suppression.</div>` : ""}
+
+${childhoodCaveat ? `<div class="note"><strong>Childhood note:</strong> Childhood symptom scores were notably lower than adult scores. This may reflect effective early masking, a supportive childhood environment, or later-onset presentation. DSM-5 requires several symptoms present before age 12 — this warrants further clinical exploration.</div>` : ""}
+
+${context.gender === "Woman" && (clusterPct.inattentive || 0) > (clusterPct.hyperactive || 0) + 15 ? `<div class="note"><strong>Gender note:</strong> This patient presents with a predominantly inattentive profile. Research consistently shows inattentive ADHD is underdiagnosed in women due to quieter symptom presentation and higher rates of compensatory masking.</div>` : ""}
+
+<h2>Functional Impairment</h2>
+<div class="meta">
+  <div class="meta-item"><strong>Impact level:</strong> ${impairment.level === "significant" ? "Significant" : impairment.level === "moderate" ? "Moderate" : "Low"} (${impairment.pct}%)</div>
+</div>
+<p style="font-size: 13px; line-height: 1.7; color: #3D2E22;">
+  ${impairment.level === "significant" ? "Patient reports significant functional impairment across work, relationships, self-esteem, or daily responsibilities. Combined with elevated symptom scores, this supports further clinical investigation." : impairment.level === "moderate" ? "Patient reports moderate functional impairment in some life areas. This warrants clinical exploration even though impairment is not reported across all domains." : "Patient reports relatively low functional impairment. This could reflect effective coping strategies, mild symptom severity, or under-recognition of impact. DSM-5 requires impairment in two or more settings for diagnosis."}
+</p>
+
+${differentialFlags.length > 0 ? `
+<h2>Differential / Comorbidity Flags</h2>
+<p style="font-size: 13px; line-height: 1.7; color: #3D2E22; margin-bottom: 8px;">
+  The patient endorsed significant symptoms in the following areas that commonly overlap with or co-occur alongside ADHD. These warrant exploration during clinical assessment:
+</p>
+<table>
+  <tr><th>Area</th><th>Signal</th><th>Clinical note</th></tr>
+  ${differentialFlags.map(f => `<tr>
+    <td><strong>${f.label}</strong></td>
+    <td class="${f.score === 4 ? "high" : "moderate"}">${f.score === 4 ? "Strong" : "Flagged"}</td>
+    <td style="font-size: 12px;">${f.desc}</td>
+  </tr>`).join("")}
+</table>
+<div class="note"><strong>Context:</strong> ADHD commonly co-occurs with anxiety (~53%), depression (~58%), and sleep disorders (~37%) in adults (Adler et al. 2018). These flags do not reduce ADHD likelihood but should inform a comprehensive assessment.</div>
+` : ""}
+
+<h2>Methodology</h2>
+<p style="font-size: 13px; line-height: 1.7; color: #3D2E22; margin-bottom: 8px;">
+This screening tool uses a two-tier scoring system. The <strong>core signal</strong> is a weighted composite: inattentive symptoms (40%), executive dysfunction (20%), hyperactive-impulsive symptoms (20%), emotional dysregulation (10%), and hyperfocus (10%). Weights are based on relative predictive validity in adult populations (Kessler et al. 2005, 2007; Barkley 2011). The <strong>Part A screen</strong> counts items scoring "Often" or "Always" on the 7 questions most closely mapping to the WHO Adult ADHD Self-Report Scale (ASRS v1.1) Part A, where 4+ of 7 is considered a positive screen. <strong>Masking</strong> is applied as an upward modifier to account for coping-related score suppression.
+</p>
+
+<div class="footer">
+  <p><strong>Important:</strong> This is a self-report screening tool, not a clinical diagnosis. It is intended to support — not replace — professional assessment. The ASRS v1.1 Part A has demonstrated sensitivity of 68.7% and specificity of 99.5% for DSM-IV ADHD in clinical validation (Kessler et al. 2005).</p>
+  <p style="margin-top: 8px;">Generated by ADHD Self-Assessment Tool — ${today}</p>
+</div>
+
+<div class="no-print" style="margin-top: 24px; text-align: center;">
+  <button onclick="window.print()" style="background: #2A6B6B; color: #fff; border: none; border-radius: 4px; padding: 12px 32px; font-family: 'Playfair Display', Georgia, serif; font-size: 16px; font-weight: 600; cursor: pointer;">
+    Print this page
+  </button>
+</div>
+</body></html>`;
+
+  const blob = new Blob([html], { type: "text/html" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "ADHD-Screening-GP-Summary.html";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ─── RESULTS SCREEN ──────────────────────────────────────────────────
+
+function ResultsScreen({ answers, context }) {
+  const allQuestions = SECTIONS.filter((s) => s.type === "questions").flatMap((s) => s.questions);
+
+  // Calculate display cluster percentages (all 7 clusters, for the breakdown bars)
+  const clusterPct = calculateClusterPercentages(answers, allQuestions);
+
+  // Calculate the new clinically-grounded score
+  const scoring = calculateFullScore(answers);
+  const { coreSignal, adjustedScore, partA, masking, likelihood, maskingApplied, maskingBoost, childhoodCaveat } = scoring;
+
+  // Calculate impairment and differential
+  const impairment = calculateImpairment(answers);
+  const differentialFlags = calculateDifferential(answers);
+
+  // Determine dominant presentation type
+  const inattentivePct = clusterPct.inattentive || 0;
+  const hyperactivePct = clusterPct.hyperactive || 0;
+  const isInattentiveDominant = inattentivePct > hyperactivePct + 15;
+  const isHyperactiveDominant = hyperactivePct > inattentivePct + 15;
+  const isWoman = context.gender === "Woman";
+  const highMasking = (clusterPct.masking || 0) >= 60;
+
+  let likelihoodColor = COLORS.teal;
+  let likelihoodBg = COLORS.tealPale;
+  if (likelihood === "High") { likelihoodColor = COLORS.accent; likelihoodBg = COLORS.accentPale; }
+  else if (likelihood === "Moderate") { likelihoodColor = "#C47A00"; likelihoodBg = "#FFF3CC"; }
+
+  let typeLabel = "Combined Type";
+  if (isInattentiveDominant) typeLabel = "Inattentive Type (ADD)";
+  if (isHyperactiveDominant) typeLabel = "Hyperactive-Impulsive Type";
+
+  return (
+    <div style={{ maxWidth: 720, margin: "0 auto", padding: "60px 24px 80px" }}>
+      <div style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 11, letterSpacing: "0.2em", color: COLORS.accent, textTransform: "uppercase", marginBottom: 16 }}>
+        Your Results
+      </div>
+
+      {/* ── Overall verdict ── */}
+      <div style={{ background: likelihoodBg, border: `2px solid ${likelihoodColor}`, borderRadius: 12, padding: "32px 36px", marginBottom: 36 }}>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
+          <div>
+            <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 14, color: likelihoodColor, margin: "0 0 6px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+              ADHD Likelihood
+            </p>
+            <h2 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 52, fontWeight: 700, color: likelihoodColor, margin: 0, lineHeight: 1 }}>
+              {likelihood}
+            </h2>
+            <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 16, color: COLORS.inkLight, margin: "10px 0 6px" }}>
+              Suggested presentation: <strong>{typeLabel}</strong>
+            </p>
+            <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 14, color: COLORS.muted, margin: 0, lineHeight: 1.6, maxWidth: 420 }}>
+              {isInattentiveDominant && likelihood === "High" && "Your answers show a strong and consistent pattern across attention, organisation, and emotional regulation — the three areas most associated with inattentive ADHD in adults."}
+              {isHyperactiveDominant && likelihood === "High" && "Your answers show a strong and consistent pattern across restlessness, impulsivity, and difficulty with stillness — the areas most associated with hyperactive ADHD in adults."}
+              {!isInattentiveDominant && !isHyperactiveDominant && likelihood === "High" && "Your answers show a strong and consistent pattern across both attention and energy — reflecting the combined presentation of ADHD."}
+              {likelihood === "Moderate" && "Your answers show a meaningful pattern in several areas. This could reflect mild symptoms, effective coping, or a presentation worth exploring further."}
+              {likelihood === "Low" && "Your answers don't show a strong overall pattern consistent with ADHD — though some individual areas may still be worth reflecting on."}
+            </p>
+          </div>
+          <div style={{ width: 90, height: 90, borderRadius: "50%", border: `4px solid ${likelihoodColor}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <span style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 26, fontWeight: 700, color: likelihoodColor }}>
+              {adjustedScore}%
+            </span>
+          </div>
+        </div>
+
+        {/* ── Scoring detail panel ── */}
+        <div style={{ marginTop: 20, paddingTop: 20, borderTop: `1px solid ${likelihoodColor}33` }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 16, marginBottom: 16 }}>
+            <ScoringPill label="Core signal" value={`${coreSignal}%`} />
+            <ScoringPill label="Part A screen" value={`${partA.hits}/${partA.total} items`} highlight={partA.positive} />
+            {maskingApplied && (
+              <ScoringPill label="Masking adjustment" value={`+${maskingBoost} pts`} highlight />
+            )}
+            <ScoringPill label="Functional impact" value={impairment.level === "significant" ? "Significant" : impairment.level === "moderate" ? "Moderate" : "Low"} highlight={impairment.level === "significant"} />
+          </div>
+          <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 12, color: COLORS.muted, margin: 0, lineHeight: 1.6 }}>
+            <strong>How we score this:</strong> Your core signal is a weighted score across inattentive (40%), executive dysfunction (20%), hyperactive-impulsive (20%), emotional (10%), and hyperfocus (10%) clusters — based on which symptoms are most predictive of ADHD in adults. The Part A screen counts how many of the 7 highest-signal questions you answered 'Often' or 'Always'. Masking is treated as a modifier that adjusts your score upward, reflecting that strong coping can suppress raw symptom scores.
+          </p>
+        </div>
+      </div>
+
+      {/* ── Personal narrative ── */}
+      <PersonalNarrative clusterPct={clusterPct} context={context} scoring={scoring} answers={answers} />
+
+      {/* ── Masking callout ── */}
+      {highMasking && (
+        <div style={{ background: COLORS.tealPale, border: `1px solid ${COLORS.tealLight}`, borderRadius: 10, padding: "20px 24px", marginBottom: 28, display: "flex", gap: 16, alignItems: "flex-start" }}>
+          <span style={{ fontSize: 24 }}>⚠️</span>
+          <div>
+            <p style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 17, fontWeight: 700, color: COLORS.teal, margin: "0 0 6px" }}>
+              High masking detected
+            </p>
+            <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 14, color: COLORS.inkLight, lineHeight: 1.6, margin: 0 }}>
+              Your answers suggest you may be working very hard to compensate for ADHD symptoms. This is especially common in {isWoman ? "women and girls" : "adults"} diagnosed later in life. Masking can make standard assessments underestimate how much you're struggling — your real experience may be more significant than your score suggests.
+              {maskingApplied && ` We've added ${maskingBoost} points to your score to partially account for this, but no formula fully captures the cost of constant compensation.`}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* ── Childhood caveat ── */}
+      {childhoodCaveat && (
+        <div style={{ background: "#FFF8E1", border: "1px solid #FFD54F", borderRadius: 10, padding: "20px 24px", marginBottom: 28, display: "flex", gap: 16, alignItems: "flex-start" }}>
+          <span style={{ fontSize: 24 }}>📝</span>
+          <div>
+            <p style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 17, fontWeight: 700, color: "#8D6E00", margin: "0 0 6px" }}>
+              A note about your childhood scores
+            </p>
+            <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 14, color: COLORS.inkLight, lineHeight: 1.6, margin: 0 }}>
+              ADHD requires symptoms to have been present before age 12, but your childhood section scored lower than your adult sections. This doesn't rule anything out — many people (especially women and those with inattentive presentations) masked effectively in childhood, or had supportive environments that reduced the impact of symptoms. A professional assessment would explore this in more detail.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* ── Gender note ── */}
+      {isWoman && isInattentiveDominant && (
+        <div style={{ background: "#F5F0FF", border: "1px solid #C4A8FF", borderRadius: 10, padding: "20px 24px", marginBottom: 28, display: "flex", gap: 16, alignItems: "flex-start" }}>
+          <span style={{ fontSize: 24 }}>💜</span>
+          <div>
+            <p style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 17, fontWeight: 700, color: "#6B3FA0", margin: "0 0 6px" }}>
+              A note for women with inattentive ADHD
+            </p>
+            <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 14, color: COLORS.inkLight, lineHeight: 1.6, margin: 0 }}>
+              Research consistently shows that women are diagnosed with ADHD years later than men, on average. Inattentive symptoms — the type you score higher in — are quieter and easier to miss. If a professional has ever dismissed your concerns, it may be worth seeking a specialist who is experienced with adult ADHD in women.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* ── Cluster breakdown ── */}
+      <h3 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 24, fontWeight: 700, color: COLORS.ink, margin: "40px 0 20px" }}>
+        Your symptom breakdown
+      </h3>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 48 }}>
+        {[
+          { key: "inattentive", label: "Inattention", pct: clusterPct.inattentive || 0, desc: "Difficulty focusing, following through, and staying organised", weight: "40% of core signal", typical: 20 },
+          { key: "executive", label: "Executive Dysfunction", pct: clusterPct.executive || 0, desc: "Time blindness, procrastination paralysis, task initiation", weight: "20% of core signal", typical: 22 },
+          { key: "hyperactive", label: "Hyperactivity", pct: clusterPct.hyperactive || 0, desc: "Restlessness, difficulty sitting still, feeling 'switched on'", weight: "Combined 20%", typical: 18 },
+          { key: "impulsive", label: "Impulsivity", pct: clusterPct.impulsive || 0, desc: "Acting before thinking, interrupting, difficulty waiting", weight: "Combined 20%", typical: 15 },
+          { key: "emotional", label: "Emotional Intensity", pct: clusterPct.emotional || 0, desc: "Strong emotional reactions, rejection sensitivity, justice sensitivity", weight: "10% of core signal", typical: 25 },
+          { key: "hyperfocus", label: "Hyperfocus", pct: clusterPct.hyperfocus || 0, desc: "Intense absorption in things you love — the flip side of inattention", weight: "10% of core signal", typical: 28 },
+          { key: "masking", label: "Masking & Compensation", pct: clusterPct.masking || 0, desc: "Effort spent hiding or compensating for symptoms — acts as a modifier, not a symptom", weight: "Modifier only", typical: 20 },
+        ].map((item) => (
+          <ClusterBar key={item.key} {...item} />
+        ))}
+      </div>
+
+      <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 12, color: COLORS.mutedLight, lineHeight: 1.6, marginBottom: 48, marginTop: -36 }}>
+        The <span style={{ display: "inline-block", width: 8, height: 2, background: COLORS.ink, opacity: 0.25, verticalAlign: "middle", margin: "0 4px" }}></span> marker on each bar shows where most adults without ADHD tend to score on these questions. Figures are approximate, derived from ASRS validation studies and general population screening data.
+      </p>
+
+      {/* ── Functional Impairment ── */}
+      <div style={{ marginBottom: 48 }}>
+        <h3 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 24, fontWeight: 700, color: COLORS.ink, margin: "0 0 12px" }}>
+          How much is it affecting your life?
+        </h3>
+        <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 14, color: COLORS.muted, lineHeight: 1.6, marginBottom: 20, maxWidth: 560 }}>
+          A clinical ADHD diagnosis requires not just symptoms, but evidence that those symptoms cause real difficulties across multiple areas of your life.
+        </p>
+
+        <div style={{
+          background: impairment.level === "significant" ? COLORS.accentPale : impairment.level === "moderate" ? "#FFF3CC" : COLORS.tealPale,
+          border: `2px solid ${impairment.level === "significant" ? COLORS.accent : impairment.level === "moderate" ? "#C47A00" : COLORS.teal}`,
+          borderRadius: 10, padding: "24px 28px",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+            <span style={{
+              fontFamily: "'Playfair Display', Georgia, serif", fontSize: 20, fontWeight: 700,
+              color: impairment.level === "significant" ? COLORS.accent : impairment.level === "moderate" ? "#C47A00" : COLORS.teal,
+            }}>
+              {impairment.level === "significant" ? "Significant impact" : impairment.level === "moderate" ? "Moderate impact" : "Lower impact"}
+            </span>
+            <span style={{
+              fontFamily: "'Playfair Display', Georgia, serif", fontSize: 18, fontWeight: 700,
+              color: impairment.level === "significant" ? COLORS.accent : impairment.level === "moderate" ? "#C47A00" : COLORS.teal,
+            }}>
+              {impairment.pct}%
+            </span>
+          </div>
+          <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 14, color: COLORS.inkLight, lineHeight: 1.6, margin: 0 }}>
+            {impairment.level === "significant" && "Your answers suggest these difficulties are having a real and substantial effect on your work, relationships, self-esteem, or daily functioning. This is an important piece of evidence for any professional assessment."}
+            {impairment.level === "moderate" && "Your answers suggest these difficulties are affecting some areas of your life, though not across the board. This is still worth raising with a professional — impact doesn't have to be catastrophic to be clinically meaningful."}
+            {impairment.level === "low" && "Your answers suggest these difficulties aren't causing major disruption to your life right now. This doesn't rule out ADHD — but it does suggest that either your symptoms are mild, your coping strategies are effective, or the impact is showing up in ways this section didn't capture."}
+          </p>
+          {impairment.level === "significant" && likelihood === "High" && (
+            <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 13, color: COLORS.muted, lineHeight: 1.6, marginTop: 12, fontStyle: "italic" }}>
+              High symptom scores combined with significant functional impact is precisely what clinicians look for when assessing ADHD.
+            </p>
+          )}
+          {impairment.level === "low" && likelihood === "High" && (
+            <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 13, color: COLORS.muted, lineHeight: 1.6, marginTop: 12, fontStyle: "italic" }}>
+              Note: Your ADHD symptom scores are high but your reported impact is low. This could mean you're masking effectively, that you've structured your life around your difficulties, or that the impairment is showing up in subtler ways. A professional can help explore this.
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* ── Differential Screen ── */}
+      {differentialFlags.length > 0 && (
+        <div style={{ marginBottom: 48 }}>
+          <h3 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 24, fontWeight: 700, color: COLORS.ink, margin: "0 0 12px" }}>
+            Other things worth exploring
+          </h3>
+          <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 14, color: COLORS.muted, lineHeight: 1.6, marginBottom: 20, maxWidth: 560 }}>
+            {likelihood === "High" || likelihood === "Moderate"
+              ? "Your ADHD scores are notable — but you also flagged in areas that overlap with or commonly co-occur alongside ADHD. This doesn't weaken your ADHD result; it means a professional assessment should consider the full picture."
+              : "Your ADHD scores were lower, but you flagged in some areas that can produce ADHD-like symptoms on their own. It's worth exploring these with a professional."}
+          </p>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {differentialFlags.map((flag) => (
+              <div
+                key={flag.key}
+                style={{
+                  background: "#FFF8F0",
+                  border: "1px solid #F0D9B5",
+                  borderRadius: 10,
+                  padding: "18px 22px",
+                  display: "flex",
+                  gap: 14,
+                  alignItems: "flex-start",
+                }}
+              >
+                <div style={{
+                  width: 36, height: 36, borderRadius: "50%",
+                  background: "#F5E6D0", display: "flex", alignItems: "center", justifyContent: "center",
+                  flexShrink: 0, marginTop: 2,
+                }}>
+                  <span style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 14, fontWeight: 700, color: "#A07030" }}>
+                    {flag.key === "anxiety" ? "😰" : flag.key === "depression" ? "😔" : flag.key === "sleep" ? "😴" : flag.key === "burnout" ? "🔥" : "⚡"}
+                  </span>
+                </div>
+                <div>
+                  <p style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 16, fontWeight: 700, color: COLORS.ink, margin: "0 0 4px" }}>
+                    {flag.label} {flag.score === 4 ? "(strong signal)" : "(flagged)"}
+                  </p>
+                  <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 13, color: COLORS.inkLight, lineHeight: 1.6, margin: 0 }}>
+                    {flag.desc}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 12, color: COLORS.mutedLight, lineHeight: 1.6, marginTop: 14 }}>
+            {likelihood === "High"
+              ? "These flags don't reduce your ADHD likelihood — ADHD very commonly co-occurs with anxiety (53%), depression (58%), and sleep difficulties (37%). A good assessment will explore all of these together."
+              : "A professional can help untangle which of these are primary and which might be consequences of each other."}
+          </p>
+        </div>
+      )}
+
+      {/* ── What next ── */}
+      <div style={{ borderTop: `2px solid ${COLORS.warm}`, paddingTop: 40 }}>
+        <h3 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 24, fontWeight: 700, color: COLORS.ink, marginBottom: 20 }}>
+          What should you do next?
+        </h3>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          {likelihood === "High" && (
+            <NextStep icon="🩺" title="Speak to a professional" body="Your results suggest it's worth seeking a formal assessment. Ask your GP for a referral to a psychiatrist or clinical psychologist with ADHD experience. Bring these results with you — they can help start the conversation." />
+          )}
+          {likelihood === "Moderate" && (
+            <NextStep icon="📋" title="Keep track of your experiences" body="Your results are in a borderline range. It may be worth journalling your symptoms for a few weeks and then speaking to your GP — especially if you're experiencing real difficulties at work, in relationships, or with your wellbeing." />
+          )}
+          {likelihood === "Low" && (
+            <NextStep icon="🔍" title="Consider other explanations" body="Your results don't strongly suggest ADHD. However, anxiety, depression, sleep disorders, and burnout can all cause similar symptoms. If you're struggling, it's always worth talking to your GP." />
+          )}
+          <NextStep icon="📚" title="Learn more about how ADHD actually feels" body="Books like 'ADHD 2.0' (Hallowell & Ratey), 'Scattered Minds' (Gabor Maté), and 'Women with ADHD' (Sari Solden) describe the inner experience of ADHD in ways that can be genuinely illuminating — whether or not you have a diagnosis." />
+          <NextStep icon="💡" title="What this result actually means" body="A screening tool like this can help you recognise patterns and give you language for experiences you may have struggled to name for years. It can't tell you definitively whether you have ADHD — but it can tell you whether your experiences align with how ADHD tends to show up in adults. That's a meaningful first step." />
+        </div>
+      </div>
+
+      {/* ── GP Export ── */}
+      <div style={{ marginTop: 48, padding: "28px 32px", background: COLORS.paper, border: `2px solid ${COLORS.warm}`, borderRadius: 12 }}>
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 16 }}>
+          <span style={{ fontSize: 28, flexShrink: 0 }}>🩺</span>
+          <div style={{ flex: 1 }}>
+            <h4 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 20, fontWeight: 700, color: COLORS.ink, margin: "0 0 8px" }}>
+              Take this to your GP
+            </h4>
+            <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 14, color: COLORS.muted, lineHeight: 1.6, margin: "0 0 20px" }}>
+              Download a clean summary of your results to print or share with a healthcare professional. It includes your scores, cluster breakdown, and relevant clinical context — designed to help start a productive conversation.
+            </p>
+            <button
+              onClick={() => generateGPExport(clusterPct, scoring, context, typeLabel, impairment, differentialFlags)}
+              style={{ background: COLORS.teal, color: "#fff", border: "none", borderRadius: 4, padding: "14px 28px", fontFamily: "'Playfair Display', Georgia, serif", fontSize: 16, fontWeight: 600, cursor: "pointer", transition: "background 0.2s" }}
+              onMouseOver={(e) => (e.target.style.background = COLORS.tealLight)}
+              onMouseOut={(e) => (e.target.style.background = COLORS.teal)}
+            >
+              Download GP Summary
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <button
+        onClick={() => window.location.reload()}
+        style={{ marginTop: 24, padding: "14px 28px", border: `2px solid ${COLORS.warm}`, borderRadius: 4, background: "transparent", color: COLORS.muted, fontFamily: "'Lora', Georgia, serif", fontSize: 15, cursor: "pointer" }}
+      >
+        ← Start over
+      </button>
+    </div>
+  );
+}
+
+function ScoringPill({ label, value, highlight }) {
+  return (
+    <div style={{
+      display: "inline-flex", alignItems: "center", gap: 8,
+      background: highlight ? COLORS.accentPale : COLORS.paper,
+      border: `1px solid ${highlight ? COLORS.accentLight + "66" : COLORS.warm}`,
+      borderRadius: 20, padding: "6px 14px",
+    }}>
+      <span style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 12, color: COLORS.muted }}>{label}</span>
+      <span style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 14, fontWeight: 700, color: highlight ? COLORS.accent : COLORS.ink }}>{value}</span>
+    </div>
+  );
+}
+
+function ClusterBar({ label, pct, desc, weight, typical }) {
+  const barColor = pct >= 65 ? COLORS.accent : pct >= 40 ? "#C47A00" : COLORS.teal;
+  const bgColor = pct >= 65 ? COLORS.accentPale : pct >= 40 ? "#FFF3CC" : COLORS.tealPale;
+
+  return (
+    <div style={{ padding: "16px 20px", background: bgColor, borderRadius: 8 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+          <span style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 15, fontWeight: 700, color: COLORS.ink }}>{label}</span>
+          <span style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 11, color: COLORS.mutedLight }}>{weight}</span>
+        </div>
+        <span style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 14, fontWeight: 700, color: barColor }}>{pct}%</span>
+      </div>
+      <div style={{ position: "relative", height: 6, background: COLORS.warm, borderRadius: 3, marginBottom: 8, overflow: "visible" }}>
+        <div style={{ height: "100%", width: `${pct}%`, background: barColor, borderRadius: 3, transition: "width 1s ease" }} />
+        {/* Typical range marker */}
+        {typical != null && (
+          <div style={{
+            position: "absolute", top: -3, left: `${typical}%`, transform: "translateX(-50%)",
+            width: 2, height: 12, background: COLORS.ink, opacity: 0.25, borderRadius: 1,
+          }} />
+        )}
+      </div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+        <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 13, color: COLORS.muted, margin: 0 }}>{desc}</p>
+        {typical != null && (
+          <span style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 11, color: COLORS.mutedLight, flexShrink: 0, marginLeft: 12 }}>
+            Typical: ~{typical}%
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function NextStep({ icon, title, body }) {
+  return (
+    <div style={{ display: "flex", gap: 16, padding: "18px 20px", background: COLORS.paper, borderRadius: 8, border: `1px solid ${COLORS.warm}` }}>
+      <span style={{ fontSize: 22, flexShrink: 0 }}>{icon}</span>
+      <div>
+        <p style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 16, fontWeight: 700, color: COLORS.ink, margin: "0 0 4px" }}>{title}</p>
+        <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 14, color: COLORS.inkLight, lineHeight: 1.6, margin: 0 }}>{body}</p>
+      </div>
+    </div>
+  );
+}
+
+// ─── APP ROOT ────────────────────────────────────────────────────────
+
+function App() {
+  const [sectionIndex, setSectionIndex] = useState(0);
+  const [answers, setAnswers] = useState({});
+  const [context, setContext] = useState({});
+  const [fontsLoaded, setFontsLoaded] = useState(false);
+
+  useEffect(() => {
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = "https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Lora:ital,wght@0,400;0,600;1,400&display=swap";
+    document.head.appendChild(link);
+    link.onload = () => setFontsLoaded(true);
+    setTimeout(() => setFontsLoaded(true), 1500);
+  }, []);
+
+  const questionSections = SECTIONS.filter((s) => s.type === "questions");
+  const currentSection = SECTIONS[sectionIndex];
+
+  const handleAnswer = (qid, val) => setAnswers((prev) => ({ ...prev, [qid]: val }));
+  const goNext = () => setSectionIndex((i) => Math.min(i + 1, SECTIONS.length - 1));
+  const goBack = () => setSectionIndex((i) => Math.max(i - 1, 0));
+
+  const showProgress = sectionIndex > 1 && sectionIndex < SECTIONS.length - 1;
+
+  return (
+    <div style={{ minHeight: "100vh", background: COLORS.cream, fontFamily: "'Lora', Georgia, serif" }}>
+      <style>{`
+        * { box-sizing: border-box; }
+        body { margin: 0; }
+        button { outline: none; }
+        button:focus-visible { outline: 2px solid ${COLORS.accent}; outline-offset: 2px; }
+      `}</style>
+
+      {showProgress && <ProgressBar current={sectionIndex - 1} total={questionSections.length} />}
+
+      {currentSection.type === "intro" && <IntroScreen onStart={goNext} />}
+      {currentSection.type === "context" && <ContextScreen onNext={(ctx) => { setContext(ctx); goNext(); }} />}
+      {currentSection.type === "questions" && (
+        <QuestionSection
+          section={currentSection}
+          answers={answers}
+          onChange={handleAnswer}
+          onNext={goNext}
+          onBack={goBack}
+          isLast={sectionIndex === SECTIONS.length - 2}
+        />
+      )}
+      {currentSection.type === "results" && <ResultsScreen answers={answers} context={context} />}
+    </div>
+  );
+}
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(React.createElement(App));
+  </script>
+</body>
+</html>
