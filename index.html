@@ -412,6 +412,85 @@ function ProgressBar({ current, total }) {
   );
 }
 
+function ReportPreview({ onStart }) {
+  const bars = [
+    { label: "Inattention", pct: 78, color: "#C4581A" },
+    { label: "Executive Dysfunction", pct: 72, color: "#C4581A" },
+    { label: "Hyperactivity", pct: 42, color: "#C47A00" },
+    { label: "Impulsivity", pct: 55, color: "#C47A00" },
+    { label: "Emotional Intensity", pct: 85, color: "#C4581A" },
+    { label: "Hyperfocus", pct: 70, color: "#C4581A" },
+    { label: "Masking & Compensation", pct: 88, color: "#2A6B6B" },
+  ];
+  return (
+    <div style={{ marginTop: 64, marginBottom: 8 }}>
+      <div style={{ textAlign: "center", marginBottom: 28 }}>
+        <div style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 11, letterSpacing: "0.2em", color: COLORS.accent, textTransform: "uppercase", marginBottom: 10 }}>What you will receive</div>
+        <h2 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: "clamp(24px, 4vw, 34px)", fontWeight: 700, color: COLORS.ink, margin: "0 0 10px", lineHeight: 1.2 }}>
+          A report built around <em style={{ fontStyle: "italic", color: COLORS.accent }}>you</em>
+        </h2>
+        <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 15, color: COLORS.muted, lineHeight: 1.7, maxWidth: 460, margin: "0 auto" }}>
+          Not a single score. A full breakdown across seven symptom clusters, a personal written profile, and a GP-ready summary you can actually use.
+        </p>
+      </div>
+      <div style={{ maxWidth: 600, margin: "0 auto", background: COLORS.paper, border: "2px solid " + COLORS.warm, borderRadius: 14, overflow: "hidden", boxShadow: "0 6px 32px rgba(26,20,16,0.10)" }}>
+        <div style={{ background: COLORS.ink, padding: "18px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div>
+            <div style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 10, letterSpacing: "0.18em", color: COLORS.accentLight, textTransform: "uppercase", marginBottom: 3 }}>Your Results</div>
+            <div style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 17, color: "#F9F5EE", fontWeight: 700 }}>ADHD Mirror Assessment</div>
+          </div>
+          <div style={{ textAlign: "right" }}>
+            <div style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 10, color: COLORS.mutedLight, marginBottom: 2 }}>ADHD Likelihood</div>
+            <div style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 22, fontWeight: 700, color: COLORS.accentLight }}>High</div>
+          </div>
+        </div>
+        <div style={{ padding: "20px 24px" }}>
+          <div style={{ background: COLORS.ink, borderRadius: 8, padding: "16px 20px", marginBottom: 16, position: "relative", overflow: "hidden" }}>
+            <div style={{ position: "absolute", top: 4, left: 12, fontFamily: "'Playfair Display', Georgia, serif", fontSize: 60, lineHeight: 1, color: COLORS.accent, opacity: 0.15, pointerEvents: "none" }}>"</div>
+            <div style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 10, letterSpacing: "0.15em", color: COLORS.accentLight, textTransform: "uppercase", marginBottom: 8 }}>Your Personal Profile</div>
+            <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 13, lineHeight: 1.75, color: "#F9F5EE", margin: 0, position: "relative", zIndex: 1 }}>
+              What stands out most in your answers isn't just the symptoms themselves — it's how much energy you appear to spend managing them. Your profile leans heavily toward the inattentive presentation, where the struggle isn't so much about energy as it is about finding the mental traction to start, sustain, and finish things.
+            </p>
+          </div>
+          <div style={{ marginBottom: 4 }}>
+            <div style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 12, fontWeight: 700, color: COLORS.ink, marginBottom: 10 }}>Symptom breakdown across 7 clusters</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {bars.map(b => (
+                <div key={b.label} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div style={{ width: 148, fontFamily: "'Lora', Georgia, serif", fontSize: 11, color: COLORS.inkLight, flexShrink: 0, textAlign: "right" }}>{b.label}</div>
+                  <div style={{ flex: 1, height: 7, background: COLORS.warm, borderRadius: 4, overflow: "hidden" }}>
+                    <div style={{ height: "100%", width: b.pct + "%", background: b.color, borderRadius: 4 }} />
+                  </div>
+                  <div style={{ width: 30, fontFamily: "'Lora', Georgia, serif", fontSize: 11, fontWeight: 700, color: b.color, flexShrink: 0 }}>{b.pct}%</div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid " + COLORS.warm, display: "flex", alignItems: "center", gap: 12 }}>
+            <span style={{ fontSize: 18 }}>🩺</span>
+            <div>
+              <div style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 13, fontWeight: 700, color: COLORS.ink, marginBottom: 2 }}>GP-ready summary included</div>
+              <div style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 12, color: COLORS.muted }}>Download a clinical summary with scores, cluster breakdown and differential flags — ready to take to your doctor.</div>
+            </div>
+          </div>
+        </div>
+        <div style={{ background: COLORS.warm, padding: "8px 24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 11, color: COLORS.muted, fontStyle: "italic" }}>Example output — your results will reflect your own answers</div>
+          <div style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 10, color: COLORS.mutedLight, letterSpacing: "0.08em" }}>ADHD MIRROR</div>
+        </div>
+      </div>
+      <div style={{ textAlign: "center", marginTop: 36, paddingBottom: 16 }}>
+        <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 16, color: COLORS.muted, marginBottom: 20 }}>Ready to see your own results?</p>
+        <button onClick={onStart} style={{ background: COLORS.accent, color: "#fff", border: "none", borderRadius: 4, padding: "18px 40px", fontFamily: "'Playfair Display', Georgia, serif", fontSize: 18, fontWeight: 600, cursor: "pointer", letterSpacing: "0.02em" }}
+          onMouseOver={(e) => e.target.style.background = COLORS.accentLight}
+          onMouseOut={(e) => e.target.style.background = COLORS.accent}>
+          Begin Assessment →
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function IntroScreen({ onStart }) {
   return (
     <div style={{ maxWidth: 680, margin: "0 auto", padding: "60px 24px" }}>
@@ -453,6 +532,7 @@ function IntroScreen({ onStart }) {
           <strong>Under 18?</strong> This tool was designed with adults in mind, but you're welcome to use it. If your results raise questions, please talk to a parent, carer, or another trusted adult — they can help you take any next steps together.
         </p>
       </div>
+      <ReportPreview onStart={onStart} />
     </div>
   );
 }
@@ -1004,6 +1084,10 @@ function App() {
     link.onload = () => setFontsLoaded(true);
     setTimeout(() => setFontsLoaded(true), 1500);
   }, []);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, [sectionIndex]);
 
   const questionSections = SECTIONS.filter((s) => s.type === "questions");
   const currentSection = SECTIONS[sectionIndex];
