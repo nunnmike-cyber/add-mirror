@@ -1070,11 +1070,250 @@ function ResultsScreen({ answers, context }) {
   );
 }
 
+
+// ─── ARTICLES DATA ───────────────────────────────────────────────────
+
+const ARTICLES = [
+  {
+    id: "what-is-adhd-masking",
+    title: "What is ADHD masking?",
+    subtitle: "Why so many adults with ADHD go undiagnosed — and the hidden cost of appearing fine.",
+    readTime: "5 min read",
+    content: [
+      { type: "intro", text: "Masking — also called 'camouflaging' — is the conscious or unconscious process of hiding ADHD symptoms in order to fit in, meet expectations, or avoid judgment. For many adults, it's so deeply ingrained that they don't realise they're doing it." },
+      { type: "heading", text: "What does masking look like?" },
+      { type: "paragraph", text: "Masking looks different for different people. It might mean memorising social scripts so that conversations feel easier. It might mean arriving early to every meeting to compensate for time blindness. It might mean building elaborate systems of alarms, lists, and rituals just to do what others seem to manage effortlessly." },
+      { type: "paragraph", text: "From the outside, a person who masks effectively looks organised, capable, and on top of things. From the inside, they're exhausted — running two versions of themselves at once: the one the world sees, and the one they know is barely holding it together." },
+      { type: "pullquote", text: "Masking is a performance that costs far more energy than the audience ever sees." },
+      { type: "heading", text: "Why masking leads to missed diagnoses" },
+      { type: "paragraph", text: "Traditional ADHD screening tools were largely developed on young boys with obvious hyperactive symptoms. Adults — and especially women — who have spent years compensating for their difficulties often don't 'look' like someone with ADHD. They hold down jobs, maintain friendships, and keep the house broadly functional. By the time they reach a clinician, their coping strategies have become so automatic that even they struggle to describe how hard things really are." },
+      { type: "paragraph", text: "The problem is that masking doesn't make the underlying difficulties go away. It just hides them — from others, and from standard assessments. A person can score below the threshold on a checklist not because their symptoms are mild, but because they've spent thirty years becoming very good at compensating for them." },
+      { type: "heading", text: "The cost of long-term masking" },
+      { type: "paragraph", text: "Research has consistently linked high masking with significantly worse mental health outcomes — including higher rates of anxiety, depression, burnout, and autistic or ADHD burnout specifically. When you spend every available unit of cognitive and emotional energy on appearing 'normal', there's nothing left for the things that actually matter." },
+      { type: "paragraph", text: "Many people who are diagnosed in adulthood describe a moment of grief alongside the relief — grief for the version of themselves who spent decades working twice as hard just to keep pace, and who was never told why." },
+      { type: "heading", text: "How ADHD Mirror accounts for masking" },
+      { type: "paragraph", text: "Most ADHD screening tools ignore masking entirely. ADHD Mirror includes a dedicated masking section and applies your masking score as an upward modifier to your overall result — recognising that high compensatory coping can suppress raw symptom scores and underestimate the real picture. If you score high on masking, your adjusted score will reflect that." },
+    ],
+  },
+  {
+    id: "adhd-in-adults-late-diagnosis",
+    title: "ADHD in adults: why so many people are diagnosed late",
+    subtitle: "The gap between childhood diagnosis and adult reality — and what makes adult ADHD so easy to miss.",
+    readTime: "6 min read",
+    content: [
+      { type: "intro", text: "ADHD has long been thought of as a childhood condition — something hyperactive boys grow out of, or that gets caught in school. The reality is that millions of adults are living with undiagnosed ADHD, many of whom were never hyperactive, never struggled visibly, and were told throughout childhood that they were bright but needed to apply themselves." },
+      { type: "heading", text: "Why adult ADHD goes unrecognised" },
+      { type: "paragraph", text: "There are several reasons why ADHD is frequently missed in adults. The first is the stereotype: ADHD is still widely associated with small boys who can't sit still. Adults — particularly women, and particularly those with the inattentive presentation — simply don't match that image. Their symptoms are quieter, more internal, easier to attribute to personality traits, anxiety, or just not trying hard enough." },
+      { type: "paragraph", text: "The second is masking. By adulthood, many people with ADHD have developed elaborate compensatory strategies. They appear to manage — even to thrive — while privately exerting a level of effort that is fundamentally unsustainable." },
+      { type: "pullquote", text: "Many adults describe looking back at a lifetime of underperformance, missed potential, and chronic self-blame — and realising, for the first time, that there was a reason." },
+      { type: "heading", text: "The gender gap in diagnosis" },
+      { type: "paragraph", text: "The disparity between male and female diagnosis rates is one of the most well-documented issues in ADHD research. Boys are roughly three times more likely to be diagnosed in childhood. This gap narrows significantly in adulthood — not because fewer women have ADHD, but because the profile is finally being recognised." },
+      { type: "paragraph", text: "Women with ADHD tend to show more internalised symptoms: anxiety, perfectionism, people-pleasing, and relentless self-criticism. These are not the hallmarks of the ADHD that most clinicians were trained to identify. Many women receive diagnoses of anxiety or depression — which often co-exist with ADHD — without anyone ever looking for the underlying cause." },
+      { type: "heading", text: "What does adult ADHD actually look like?" },
+      { type: "paragraph", text: "In adults, ADHD often presents less as obvious restlessness and more as: chronic procrastination that feels like paralysis; an inability to start tasks despite genuinely wanting to; time blindness (consistently misjudging how long things take); intense emotional reactivity; and the peculiar experience of being able to hyperfocus for hours on something engaging while being completely unable to attend to something you 'should' be doing." },
+      { type: "paragraph", text: "Many adults describe a sense of always running behind — of being the person who forgets things, misses deadlines, talks too much, loses things, says the wrong thing at the wrong moment — and spending years believing this was a character flaw rather than a neurological difference." },
+      { type: "heading", text: "Is a late diagnosis worth pursuing?" },
+      { type: "paragraph", text: "For many people, yes. A formal diagnosis opens access to medication (which is highly effective for ADHD in many cases), psychological support, and — perhaps most significantly — a framework for understanding a lifetime of experiences that never quite made sense. The self-blame begins to lift when you understand the mechanism." },
+      { type: "paragraph", text: "It's also worth knowing that a diagnosis doesn't require you to do anything. It's information. What you do with it is entirely up to you." },
+    ],
+  },
+  {
+    id: "adhd-vs-anxiety",
+    title: "ADHD vs anxiety: how to tell the difference",
+    subtitle: "Two conditions that look remarkably similar — and why they so often travel together.",
+    readTime: "5 min read",
+    content: [
+      { type: "intro", text: "ADHD and anxiety share so many surface-level symptoms that they're frequently confused for each other — or, just as commonly, one is treated while the other is left unaddressed. Understanding how they differ, and how they interact, is one of the most practically useful things you can know before seeking a formal assessment." },
+      { type: "heading", text: "The overlapping symptoms" },
+      { type: "paragraph", text: "Both ADHD and anxiety can cause: difficulty concentrating, racing thoughts, restlessness, procrastination, avoidance of demanding tasks, sleep problems, and emotional dysregulation. On a standard checklist, they're almost indistinguishable. This is one reason why many people are diagnosed with anxiety when ADHD is the primary driver — and why treating the anxiety alone rarely resolves everything." },
+      { type: "pullquote", text: "The question isn't just 'which one do I have?' — it's 'how are they interacting, and which came first?'" },
+      { type: "heading", text: "Key differences to look for" },
+      { type: "paragraph", text: "One useful distinction is the nature of the attention difficulty. In anxiety, poor focus tends to be topic-specific: the mind is pulled towards worries and worst-case scenarios. In ADHD, poor focus is more indiscriminate and context-dependent — it shifts based on interest, novelty, and urgency rather than emotional content. The ADHD brain can hyperfocus intensely on something engaging while being completely unable to attend to something anxiety-provoking." },
+      { type: "paragraph", text: "Another distinction is the restlessness. In generalised anxiety, restlessness feels driven by worry — there's a sense that something bad might happen. In ADHD, the restlessness is more internal and physical — a feeling of being 'switched on', a motor that won't stop, even when things are perfectly fine." },
+      { type: "paragraph", text: "Timing is also informative. ADHD symptoms are typically lifelong and pervasive. Anxiety can develop at any point and is often linked to specific circumstances or life events. If your concentration has always been poor, ADHD is more likely. If it deteriorated after a difficult period, anxiety or burnout may be a larger factor." },
+      { type: "heading", text: "When they co-occur" },
+      { type: "paragraph", text: "Approximately 50% of adults with ADHD also meet criteria for an anxiety disorder. This isn't coincidental. ADHD makes life harder: the missed deadlines, the failed relationships, the constant sense of underperforming create fertile ground for anxiety to develop. In this case, anxiety is often a secondary condition — a consequence of living with unmanaged ADHD — and treating the ADHD may significantly reduce the anxiety." },
+      { type: "paragraph", text: "However, the relationship can run in the other direction too. Chronic anxiety can impair executive function and attention in ways that look very much like ADHD. Only a thorough assessment can untangle which is primary, which is secondary, and what treatment approach makes the most sense." },
+      { type: "heading", text: "What to do next" },
+      { type: "paragraph", text: "If you suspect both, the most useful thing you can do is find a clinician who is experienced with ADHD and who won't stop at an anxiety diagnosis. A good assessment will consider both — and the difference in treatment, and in self-understanding, can be significant." },
+    ],
+  },
+  {
+    id: "what-does-adhd-assessment-involve",
+    title: "What does an ADHD assessment actually involve?",
+    subtitle: "What to expect before, during, and after a formal ADHD evaluation — and how to prepare.",
+    readTime: "5 min read",
+    content: [
+      { type: "intro", text: "For many people, the idea of a formal ADHD assessment is both appealing and intimidating. You want answers, but you're not sure what 'getting assessed' actually means, what it costs, or how to make the process work for you. Here's a practical overview." },
+      { type: "heading", text: "Who carries out an ADHD assessment?" },
+      { type: "paragraph", text: "In the UK, ADHD can be formally diagnosed by a psychiatrist or clinical psychologist with ADHD specialisation. You can access this via the NHS (through a GP referral, though waiting times are often 18 months to several years) or privately (expect to pay £500–£1,500 for a full assessment, depending on provider)." },
+      { type: "paragraph", text: "The Right to Choose pathway allows UK patients to choose an alternative provider to their local NHS service for a mental health referral — this can significantly reduce waiting times and is worth discussing with your GP." },
+      { type: "heading", text: "What happens during the assessment?" },
+      { type: "paragraph", text: "A comprehensive ADHD assessment typically includes: a detailed clinical interview covering your current symptoms and their impact on daily functioning; exploration of your developmental history, including childhood behaviour and school experiences; standardised rating scales (often the ASRS, Conners, or similar); and sometimes collateral information from a partner, family member, or old school reports." },
+      { type: "paragraph", text: "The clinician will be trying to establish: whether you have a significant number of symptoms across both the inattentive and hyperactive-impulsive domains; whether those symptoms have been present since childhood; and whether they cause meaningful impairment across more than one area of your life." },
+      { type: "pullquote", text: "The most useful thing you can bring to an assessment is specific examples — not just 'I'm disorganised', but the actual incidents that have cost you jobs, relationships, or years of self-blame." },
+      { type: "heading", text: "How to prepare" },
+      { type: "paragraph", text: "Think through specific, concrete examples of how your symptoms affect your daily life — at work, in relationships, with money and admin, with time. Write them down. Consider asking a partner, family member, or close friend to share their observations. If you have old school reports that mention concentration, effort, or behaviour, dig them out." },
+      { type: "paragraph", text: "And bring any self-assessment results you have — including this one." },
+      { type: "heading", text: "What happens if you're diagnosed?" },
+      { type: "paragraph", text: "A positive diagnosis opens access to medication (stimulants like methylphenidate or lisdexamfetamine are the most commonly prescribed, and are effective for around 70–80% of people), psychological interventions (particularly ADHD-focused CBT and coaching), and formal workplace or educational accommodations." },
+      { type: "paragraph", text: "Many people describe the post-diagnosis period as a mixture of relief and grief — relief at finally having an explanation, and grief for the years spent not knowing. Both are entirely valid." },
+      { type: "heading", text: "What if the assessment comes back negative?" },
+      { type: "paragraph", text: "A negative result doesn't mean your difficulties aren't real. It might mean ADHD isn't the primary explanation — or it might mean the assessment didn't fully capture your presentation, particularly if masking was a factor. If you feel strongly that the result doesn't reflect your experience, it's worth seeking a second opinion from a specialist experienced with adult and late-diagnosed ADHD." },
+    ],
+  },
+  {
+    id: "adhd-in-women",
+    title: "ADHD in women: why it looks different and gets missed",
+    subtitle: "How ADHD presents differently in women — and the systemic reasons so many go undiagnosed until adulthood.",
+    readTime: "6 min read",
+    content: [
+      { type: "intro", text: "ADHD in women is one of the most underrecognised and underdiagnosed conditions in mental health. Not because it's rare — women are diagnosed at roughly the same rate as men in adulthood — but because the clinical picture looks different, the compensatory strategies are more sophisticated, and the professionals supposed to identify it have historically been trained on a very narrow profile." },
+      { type: "heading", text: "The research gap" },
+      { type: "paragraph", text: "Until the 1990s, nearly all ADHD research was conducted on young boys. The diagnostic criteria that emerged from that research naturally reflected how ADHD presents in that population — prominently hyperactive, externalising, disruptive. Girls and women, whose ADHD more frequently presents as internalised distress, quietly missed deadlines, and invisible cognitive effort, simply didn't match the template." },
+      { type: "paragraph", text: "This has begun to change. But the diagnostic criteria, the training of most GPs, and the cultural assumptions about ADHD haven't fully caught up. Many women are still told — explicitly or implicitly — that they can't have ADHD because they were good at school, or hold down a job, or seem organised." },
+      { type: "pullquote", text: "Women are often told they can't have ADHD because they were good at school. What's missed is how much harder they were working to get there." },
+      { type: "heading", text: "How ADHD typically presents in women" },
+      { type: "paragraph", text: "Women with ADHD more commonly show the inattentive presentation — internal restlessness rather than external hyperactivity, difficulty sustaining attention rather than obvious disruptive behaviour, and a tendency to internalise failure as personal inadequacy rather than externalise it as frustration or acting out." },
+      { type: "paragraph", text: "Common experiences include: chronic disorganisation masked by heroic effort; perfectionism as a coping mechanism; emotional intensity and rejection sensitivity; difficulty with time management despite appearing punctual; hyperfocus on areas of passionate interest; and a deep, often lifelong sense of being 'too much' or 'not enough'." },
+      { type: "heading", text: "The masking toll" },
+      { type: "paragraph", text: "Research consistently shows that women with ADHD mask at higher rates than men, and that the mental health consequences of long-term masking are significant. Women with undiagnosed ADHD have substantially higher rates of anxiety, depression, eating disorders, and burnout than the general population — conditions that are often treated in isolation, without anyone identifying the underlying neurological driver." },
+      { type: "paragraph", text: "Hormonal fluctuations across the menstrual cycle, pregnancy, and menopause also affect ADHD symptoms in ways that are still being researched. Many women report that symptoms become significantly more pronounced during the premenstrual phase, postpartum, or during perimenopause — and that this is rarely discussed in clinical settings." },
+      { type: "heading", text: "What to do if you suspect ADHD" },
+      { type: "paragraph", text: "If you've read this and something has resonated, the most important thing is to take yourself seriously. Your experiences are real whether or not you have a diagnosis. But a formal assessment, with a clinician experienced in adult and female presentations of ADHD, could give you a framework that transforms how you understand yourself — and what support you're entitled to." },
+      { type: "paragraph", text: "When you approach your GP or seek a referral, be specific about the ways your difficulties have impacted your functioning — not how you've coped with them, but what it has cost you. The compensation is often invisible. Make it visible." },
+    ],
+  },
+];
+
+// ─── ARTICLE UI COMPONENTS ────────────────────────────────────────────
+
+function ArticlesLink({ onClick }) {
+  const [hovered, setHovered] = React.useState(false);
+  return (
+    <div style={{ maxWidth: 680, margin: "0 auto", padding: "0 24px 56px" }}>
+      <div style={{ borderTop: `1px solid ${COLORS.warm}`, paddingTop: 32 }}>
+        <button
+          onClick={onClick}
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
+          style={{ background: hovered ? COLORS.paper : "transparent", border: `1px solid ${COLORS.warm}`, borderRadius: 8, padding: "18px 24px", cursor: "pointer", display: "flex", alignItems: "center", gap: 14, width: "100%", textAlign: "left", transition: "background 0.15s" }}
+        >
+          <span style={{ fontSize: 22, flexShrink: 0 }}>📚</span>
+          <div>
+            <p style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 16, fontWeight: 700, color: COLORS.ink, margin: 0 }}>Not ready to take the assessment yet?</p>
+            <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 13, color: COLORS.muted, margin: "3px 0 0", lineHeight: 1.5 }}>Read our articles on ADHD in adults, masking, anxiety, and more →</p>
+          </div>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ArticleListScreen({ onSelectArticle, onBack }) {
+  return (
+    <div style={{ maxWidth: 680, margin: "0 auto", padding: "60px 24px 80px" }}>
+      <button onClick={onBack} style={{ background: "none", border: "none", fontFamily: "'Lora', Georgia, serif", fontSize: 14, color: COLORS.muted, cursor: "pointer", padding: 0, marginBottom: 40, display: "flex", alignItems: "center", gap: 6 }}>
+        ← Back to assessment
+      </button>
+      <div style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 11, letterSpacing: "0.2em", color: COLORS.accent, textTransform: "uppercase", marginBottom: 16 }}>
+        ADHD Explained
+      </div>
+      <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: "clamp(32px, 5vw, 52px)", fontWeight: 700, color: COLORS.ink, lineHeight: 1.1, margin: "0 0 16px" }}>
+        Understanding ADHD
+      </h1>
+      <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 17, lineHeight: 1.7, color: COLORS.muted, marginBottom: 48, maxWidth: 520 }}>
+        Honest, research-grounded articles to help you understand how ADHD actually presents in adults — and what to do about it.
+      </p>
+      <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+        {ARTICLES.map((article) => (
+          <ArticleCard key={article.id} article={article} onClick={() => onSelectArticle(article.id)} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ArticleCard({ article, onClick }) {
+  const [hovered, setHovered] = React.useState(false);
+  return (
+    <div onClick={onClick} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
+      style={{ padding: "24px 4px", cursor: "pointer", borderBottom: `1px solid ${COLORS.warm}` }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16 }}>
+        <div style={{ flex: 1 }}>
+          <h2 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 20, fontWeight: 700, color: hovered ? COLORS.accent : COLORS.ink, margin: "0 0 6px", lineHeight: 1.2, transition: "color 0.15s" }}>
+            {article.title}
+          </h2>
+          <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 14, color: COLORS.muted, margin: "0 0 10px", lineHeight: 1.5 }}>
+            {article.subtitle}
+          </p>
+          <span style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 12, color: COLORS.mutedLight, letterSpacing: "0.04em" }}>
+            {article.readTime}
+          </span>
+        </div>
+        <span style={{ color: COLORS.accent, fontSize: 20, flexShrink: 0, marginTop: 2, transition: "transform 0.15s", transform: hovered ? "translateX(4px)" : "none", display: "inline-block" }}>→</span>
+      </div>
+    </div>
+  );
+}
+
+function ArticleScreen({ articleId, onBack, onStartAssessment }) {
+  const article = ARTICLES.find(a => a.id === articleId);
+  if (!article) return null;
+  return (
+    <div style={{ maxWidth: 660, margin: "0 auto", padding: "60px 24px 80px" }}>
+      <button onClick={onBack} style={{ background: "none", border: "none", fontFamily: "'Lora', Georgia, serif", fontSize: 14, color: COLORS.muted, cursor: "pointer", padding: 0, marginBottom: 40, display: "flex", alignItems: "center", gap: 6 }}>
+        ← All articles
+      </button>
+      <div style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 11, letterSpacing: "0.2em", color: COLORS.accent, textTransform: "uppercase", marginBottom: 20 }}>
+        {article.readTime}
+      </div>
+      <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: "clamp(28px, 5vw, 46px)", fontWeight: 700, color: COLORS.ink, lineHeight: 1.1, margin: "0 0 16px" }}>
+        {article.title}
+      </h1>
+      <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 18, lineHeight: 1.7, color: COLORS.muted, marginBottom: 48, borderBottom: `2px solid ${COLORS.warm}`, paddingBottom: 32 }}>
+        {article.subtitle}
+      </p>
+      <div>
+        {article.content.map((block, i) => {
+          if (block.type === "intro") return (
+            <p key={i} style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 18, lineHeight: 1.85, color: COLORS.inkLight, marginBottom: 32, fontWeight: 600 }}>{block.text}</p>
+          );
+          if (block.type === "heading") return (
+            <h2 key={i} style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 22, fontWeight: 700, color: COLORS.ink, margin: "40px 0 14px", lineHeight: 1.2 }}>{block.text}</h2>
+          );
+          if (block.type === "paragraph") return (
+            <p key={i} style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 17, lineHeight: 1.85, color: COLORS.inkLight, marginBottom: 22 }}>{block.text}</p>
+          );
+          if (block.type === "pullquote") return (
+            <div key={i} style={{ margin: "36px 0", padding: "24px 32px", borderLeft: `4px solid ${COLORS.accent}`, background: COLORS.accentPale, borderRadius: "0 8px 8px 0" }}>
+              <p style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 20, fontStyle: "italic", lineHeight: 1.65, color: COLORS.inkLight, margin: 0 }}>{block.text}</p>
+            </div>
+          );
+          return null;
+        })}
+      </div>
+      <div style={{ marginTop: 56, padding: "28px 32px", background: COLORS.paper, border: `2px solid ${COLORS.warm}`, borderRadius: 12 }}>
+        <p style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 18, fontWeight: 700, color: COLORS.ink, margin: "0 0 8px" }}>Ready to see where you land?</p>
+        <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 14, color: COLORS.muted, lineHeight: 1.6, margin: "0 0 20px" }}>Our free assessment covers masking, emotional experience, functional impact, and more — in about 5 minutes.</p>
+        <button onClick={onStartAssessment}
+          style={{ background: COLORS.accent, color: "#fff", border: "none", borderRadius: 4, padding: "14px 28px", fontFamily: "'Playfair Display', Georgia, serif", fontSize: 16, fontWeight: 600, cursor: "pointer" }}
+          onMouseOver={(e) => e.target.style.background = COLORS.accentLight}
+          onMouseOut={(e) => e.target.style.background = COLORS.accent}>
+          Begin Assessment →
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function App() {
   const [sectionIndex, setSectionIndex] = useState(0);
   const [answers, setAnswers] = useState({});
   const [context, setContext] = useState({});
   const [fontsLoaded, setFontsLoaded] = useState(false);
+  const [view, setView] = useState("assessment");
+  const [activeArticleId, setActiveArticleId] = useState(null);
 
   useEffect(() => {
     const link = document.createElement("link");
@@ -1096,11 +1335,37 @@ function App() {
   const goBack = () => setSectionIndex((i) => Math.max(i - 1, 0));
   const showProgress = sectionIndex > 1 && sectionIndex < SECTIONS.length - 1;
 
+  if (view === "article-list") {
+    return (
+      <div style={{ minHeight: "100vh", background: COLORS.cream }}>
+        <style>{`* { box-sizing: border-box; } body { margin: 0; }`}</style>
+        <ArticleListScreen
+          onSelectArticle={(id) => { setActiveArticleId(id); setView("article"); window.scrollTo(0,0); }}
+          onBack={() => { setView("assessment"); window.scrollTo(0,0); }}
+        />
+      </div>
+    );
+  }
+
+  if (view === "article") {
+    return (
+      <div style={{ minHeight: "100vh", background: COLORS.cream }}>
+        <style>{`* { box-sizing: border-box; } body { margin: 0; }`}</style>
+        <ArticleScreen
+          articleId={activeArticleId}
+          onBack={() => { setView("article-list"); window.scrollTo(0,0); }}
+          onStartAssessment={() => { setView("assessment"); setSectionIndex(1); window.scrollTo(0,0); }}
+        />
+      </div>
+    );
+  }
+
   return (
     <div style={{ minHeight: "100vh", background: COLORS.cream, fontFamily: "'Lora', Georgia, serif" }}>
       <style>{`* { box-sizing: border-box; } body { margin: 0; } button { outline: none; } button:focus-visible { outline: 2px solid ${COLORS.accent}; outline-offset: 2px; }`}</style>
       {showProgress && <ProgressBar current={sectionIndex - 1} total={questionSections.length} />}
       {currentSection.type === "intro" && <IntroScreen onStart={goNext} />}
+      {currentSection.type === "intro" && <ArticlesLink onClick={() => { setView("article-list"); window.scrollTo(0,0); }} />}
       {currentSection.type === "context" && <ContextScreen onNext={(ctx) => { setContext(ctx); goNext(); }} />}
       {currentSection.type === "questions" && (
         <QuestionSection section={currentSection} answers={answers} onChange={handleAnswer} onNext={goNext} onBack={goBack} isLast={sectionIndex === SECTIONS.length - 2} />
