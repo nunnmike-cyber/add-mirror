@@ -335,6 +335,7 @@ const SECTIONS = [
       { id: "a7", text: "I forget appointments, commitments, or things I've promised to do — even important ones", cluster: "inattentive" },
     ],
   },
+  { id: "encourage1", type: "encourage", stage: "early" },
   {
     id: "present_energy", type: "questions", label: "PART THREE", title: "Energy & Impulse",
     subtitle: "Still thinking about the past 6 months...",
@@ -381,6 +382,7 @@ const SECTIONS = [
       { id: "imp5", text: "I feel like I'm not living up to my potential because of these difficulties", cluster: "impairment" },
     ],
   },
+  { id: "encourage2", type: "encourage", stage: "late" },
   {
     id: "differential", type: "questions", label: "PART SEVEN", title: "The Bigger Picture",
     subtitle: "These questions help us check whether something else — or something additional — might be going on.",
@@ -1307,6 +1309,51 @@ function ArticleScreen({ articleId, onBack, onStartAssessment }) {
   );
 }
 
+
+// ─── ENCOURAGEMENT SCREENS ───────────────────────────────────────────
+
+function EncourageScreen({ stage, onNext }) {
+  const isEarly = stage === "early";
+  return (
+    <div style={{ maxWidth: 600, margin: "0 auto", padding: "80px 24px", textAlign: "center" }}>
+      <div style={{ fontSize: isEarly ? 48 : 44, marginBottom: 28 }}>
+        {isEarly ? "🧠" : "🏁"}
+      </div>
+      {isEarly ? (
+        <>
+          <h2 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: "clamp(26px, 4vw, 38px)", fontWeight: 700, color: COLORS.ink, margin: "0 0 20px", lineHeight: 1.2 }}>
+            Finding this hard to focus on?
+          </h2>
+          <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 17, lineHeight: 1.8, color: COLORS.inkLight, marginBottom: 16, maxWidth: 480, margin: "0 auto 16px" }}>
+            That's actually worth noting. Difficulty sustaining attention on tasks — even ones you genuinely care about — is one of the core features of ADHD.
+          </p>
+          <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 16, lineHeight: 1.8, color: COLORS.muted, marginBottom: 40, maxWidth: 460, margin: "0 auto 40px" }}>
+            The irony of struggling to complete an ADHD assessment isn't lost on us. Keep going — the results are worth it, and what you share in the next few sections matters a lot.
+          </p>
+        </>
+      ) : (
+        <>
+          <h2 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: "clamp(26px, 4vw, 38px)", fontWeight: 700, color: COLORS.ink, margin: "0 0 20px", lineHeight: 1.2 }}>
+            Nearly there
+          </h2>
+          <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 17, lineHeight: 1.8, color: COLORS.inkLight, marginBottom: 16, maxWidth: 480, margin: "0 auto 16px" }}>
+            One final section — and then your results are ready.
+          </p>
+          <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 16, lineHeight: 1.8, color: COLORS.muted, marginBottom: 40, maxWidth: 460, margin: "0 auto 40px" }}>
+            Everything you've answered so far is already being used to build your personal profile. This last part helps us give you the most complete picture possible.
+          </p>
+        </>
+      )}
+      <button onClick={onNext}
+        style={{ background: COLORS.accent, color: "#fff", border: "none", borderRadius: 4, padding: "16px 40px", fontFamily: "'Playfair Display', Georgia, serif", fontSize: 17, fontWeight: 600, cursor: "pointer", letterSpacing: "0.02em" }}
+        onMouseOver={(e) => e.target.style.background = COLORS.accentLight}
+        onMouseOut={(e) => e.target.style.background = COLORS.accent}>
+        {isEarly ? "Keep going →" : "Final section →"}
+      </button>
+    </div>
+  );
+}
+
 function App() {
   const [sectionIndex, setSectionIndex] = useState(0);
   const [answers, setAnswers] = useState({});
@@ -1331,7 +1378,22 @@ function App() {
   const questionSections = SECTIONS.filter((s) => s.type === "questions");
   const currentSection = SECTIONS[sectionIndex];
   const handleAnswer = (qid, val) => setAnswers((prev) => ({ ...prev, [qid]: val }));
-  const goNext = () => setSectionIndex((i) => Math.min(i + 1, SECTIONS.length - 1));
+
+  const trackEvent = (name, params) => {
+    if (typeof gtag !== "undefined") gtag("event", name, params || {});
+  };
+
+  const goNext = () => {
+    const next = Math.min(sectionIndex + 1, SECTIONS.length - 1);
+    const nextSection = SECTIONS[next];
+    // Fire GA events at key funnel points
+    if (sectionIndex === 0) trackEvent("assessment_started");
+    if (nextSection && nextSection.type === "results") trackEvent("results_reached");
+    if (nextSection && nextSection.type === "questions") trackEvent("section_started", { section_id: nextSection.id });
+    if (nextSection && nextSection.type === "encourage") trackEvent("encouragement_shown", { stage: nextSection.stage });
+    setSectionIndex(next);
+  };
+
   const goBack = () => setSectionIndex((i) => Math.max(i - 1, 0));
   const showProgress = sectionIndex > 1 && sectionIndex < SECTIONS.length - 1;
 
@@ -1367,6 +1429,7 @@ function App() {
       {currentSection.type === "intro" && <IntroScreen onStart={goNext} />}
       {currentSection.type === "intro" && <ArticlesLink onClick={() => { setView("article-list"); window.scrollTo(0,0); }} />}
       {currentSection.type === "context" && <ContextScreen onNext={(ctx) => { setContext(ctx); goNext(); }} />}
+      {currentSection.type === "encourage" && <EncourageScreen stage={currentSection.stage} onNext={goNext} />}
       {currentSection.type === "questions" && (
         <QuestionSection section={currentSection} answers={answers} onChange={handleAnswer} onNext={goNext} onBack={goBack} isLast={sectionIndex === SECTIONS.length - 2} />
       )}
