@@ -486,55 +486,111 @@ function ReportPreview({ onStart }) {
         <button onClick={onStart} style={{ background: COLORS.accent, color: "#fff", border: "none", borderRadius: 4, padding: "18px 40px", fontFamily: "'Playfair Display', Georgia, serif", fontSize: 18, fontWeight: 600, cursor: "pointer", letterSpacing: "0.02em" }}
           onMouseOver={(e) => e.target.style.background = COLORS.accentLight}
           onMouseOut={(e) => e.target.style.background = COLORS.accent}>
-          Begin Assessment →
+          See if this sounds like you →
         </button>
       </div>
     </div>
   );
 }
 
+// ─── UPDATED IntroScreen ──────────────────────────────────────────────
 function IntroScreen({ onStart }) {
   return (
     <div style={{ maxWidth: 680, margin: "0 auto", padding: "60px 24px" }}>
-      <div style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 11, letterSpacing: "0.2em", color: COLORS.accent, textTransform: "uppercase", marginBottom: 32 }}>
+
+      {/* Label */}
+      <div style={{
+        fontFamily: "'Playfair Display', Georgia, serif",
+        fontSize: 11, letterSpacing: "0.2em", color: COLORS.accent,
+        textTransform: "uppercase", marginBottom: 32
+      }}>
         Free Self-Assessment
       </div>
-      <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: "clamp(42px, 7vw, 72px)", fontWeight: 700, color: COLORS.ink, lineHeight: 1.05, margin: "0 0 32px" }}>
+
+      {/* Headline */}
+      <h1 style={{
+        fontFamily: "'Playfair Display', Georgia, serif",
+        fontSize: "clamp(42px, 7vw, 72px)", fontWeight: 700,
+        color: COLORS.ink, lineHeight: 1.05, margin: "0 0 24px"
+      }}>
         Do I have<br /><span style={{ color: COLORS.accent, fontStyle: "italic" }}>ADHD?</span>
       </h1>
-      <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 19, lineHeight: 1.7, color: COLORS.inkLight, marginBottom: 24, maxWidth: 540 }}>
-        This isn't just another checklist. We've built a more honest, more complete assessment — one that asks about masking, emotional experience, and how ADHD presents differently across genders.
+
+      {/* Subtitle */}
+      <p style={{
+        fontFamily: "'Lora', Georgia, serif", fontSize: 19,
+        lineHeight: 1.7, color: COLORS.inkLight, marginBottom: 8, maxWidth: 540
+      }}>
+        This isn't just another checklist. A more honest, more complete
+        assessment — one that asks about masking, emotional experience,
+        and how ADHD presents differently across genders.
       </p>
-      <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 16, lineHeight: 1.7, color: COLORS.muted, marginBottom: 48, maxWidth: 540 }}>
-        It takes about 5 minutes. Your results break down by symptom type, not just a single score. And we'll be honest with you.
+
+      {/* Social proof */}
+      <p style={{
+        fontFamily: "'Lora', Georgia, serif", fontSize: 14,
+        color: COLORS.muted, marginBottom: 28
+      }}>
+        Taken by <strong style={{ color: COLORS.inkLight }}>400+ people</strong> this month · Takes about 5 minutes · Completely free
       </p>
+
+      {/* PRIMARY CTA — above the fold */}
+      <div style={{ marginBottom: 12 }}>
+        <button
+          onClick={onStart}
+          style={{
+            background: COLORS.accent, color: "#fff", border: "none",
+            borderRadius: 4, padding: "18px 40px",
+            fontFamily: "'Playfair Display', Georgia, serif",
+            fontSize: 18, fontWeight: 600, cursor: "pointer",
+            letterSpacing: "0.02em", transition: "background 0.2s",
+          }}
+          onMouseOver={e => e.target.style.background = COLORS.accentLight}
+          onMouseOut={e => e.target.style.background = COLORS.accent}
+        >
+          See if this sounds like you →
+        </button>
+      </div>
+
+      {/* Short disclaimer */}
+      <p style={{
+        fontFamily: "'Lora', Georgia, serif", fontSize: 13,
+        color: COLORS.mutedLight, marginBottom: 48, marginTop: 0
+      }}>
+        This won't diagnose you — but it will give you something real to work with.
+      </p>
+
+      {/* Methodology badge */}
       <div style={{ display: "inline-flex", alignItems: "center", gap: 10, background: COLORS.tealPale, border: `1px solid ${COLORS.tealLight}`, borderRadius: 6, padding: "10px 16px", marginBottom: 28 }}>
         <span style={{ fontSize: 16 }}>🏛️</span>
         <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 13, color: COLORS.teal, margin: 0, fontWeight: 600 }}>
           Scoring based on ASRS v1.1 Part A methodology (WHO & Harvard Medical School), with additional research on masking and gender differences
         </p>
       </div>
-      <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 48 }}>
-        {[{ icon: "🔒", text: "Completely private" }, { icon: "🧠", text: "Clinically informed" }, { icon: "⏱", text: "~5 minutes" }].map((item) => (
+
+      {/* Trust badges */}
+      <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 56 }}>
+        {[
+          { icon: "🔒", text: "Completely private" },
+          { icon: "🧠", text: "Clinically informed" },
+          { icon: "⏱", text: "~5 minutes" }
+        ].map((item) => (
           <div key={item.text} style={{ display: "flex", alignItems: "center", gap: 8, background: COLORS.paper, border: `1px solid ${COLORS.warm}`, borderRadius: 8, padding: "8px 16px", fontFamily: "'Lora', Georgia, serif", fontSize: 14, color: COLORS.inkLight }}>
             <span>{item.icon}</span><span>{item.text}</span>
           </div>
         ))}
       </div>
-      <button onClick={onStart} style={{ background: COLORS.accent, color: "#fff", border: "none", borderRadius: 4, padding: "18px 40px", fontFamily: "'Playfair Display', Georgia, serif", fontSize: 18, fontWeight: 600, cursor: "pointer", letterSpacing: "0.02em", transition: "background 0.2s, transform 0.15s" }}
-        onMouseOver={(e) => (e.target.style.background = COLORS.accentLight)}
-        onMouseOut={(e) => (e.target.style.background = COLORS.accent)}>
-        Begin Assessment →
-      </button>
-      <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 13, color: COLORS.mutedLight, marginTop: 32, maxWidth: 480, lineHeight: 1.6 }}>
-        <strong>What this can and can't do:</strong> This tool can help you recognise patterns and give you language for experiences you may have struggled to name. It cannot diagnose ADHD — only a qualified clinician can do that after a full assessment. Think of it as a starting point, not a verdict.
-      </p>
-      <div style={{ marginTop: 20, maxWidth: 480, background: COLORS.tealPale, border: `1px solid ${COLORS.tealLight}`, borderRadius: 8, padding: "14px 18px" }}>
+
+      {/* Report preview — now below fold as reassurance */}
+      <ReportPreview onStart={onStart} />
+
+      {/* Under-18 note */}
+      <div style={{ marginTop: 32, maxWidth: 480, background: COLORS.tealPale, border: `1px solid ${COLORS.tealLight}`, borderRadius: 8, padding: "14px 18px" }}>
         <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 13, color: COLORS.teal, margin: 0, lineHeight: 1.6 }}>
           <strong>Under 18?</strong> This tool was designed with adults in mind, but you're welcome to use it. If your results raise questions, please talk to a parent, carer, or another trusted adult — they can help you take any next steps together.
         </p>
       </div>
-      <ReportPreview onStart={onStart} />
+
     </div>
   );
 }
@@ -886,18 +942,10 @@ function ResultsScreen({ answers, context }) {
         <div style={{ background: "#F0F7FF", border: "2px solid #90CAF9", borderRadius: 12, padding: "24px 28px", marginBottom: 32, display: "flex", gap: 16, alignItems: "flex-start" }}>
           <span style={{ fontSize: 26, flexShrink: 0 }}>💙</span>
           <div>
-            <p style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 18, fontWeight: 700, color: "#1565C0", margin: "0 0 8px" }}>
-              A note for you
-            </p>
-            <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 14, color: COLORS.inkLight, lineHeight: 1.7, margin: "0 0 10px" }}>
-              This tool was built with adults in mind, but what you're feeling is completely real and worth paying attention to. Lots of young people wonder the same things you're wondering — and recognising that something feels different is actually a really important first step.
-            </p>
-            <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 14, color: COLORS.inkLight, lineHeight: 1.7, margin: "0 0 10px" }}>
-              Please don't try to navigate this alone. Talk to someone you trust — a parent, a carer, an older sibling, or another adult in your life who makes you feel safe. You could also show them these results to help start that conversation.
-            </p>
-            <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 14, color: COLORS.inkLight, lineHeight: 1.7, margin: 0 }}>
-              If you'd like to take things further, a GP appointment — ideally with a parent or carer alongside you — is the right next step. ADHD in young people is well understood and there's lots of support available.
-            </p>
+            <p style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 18, fontWeight: 700, color: "#1565C0", margin: "0 0 8px" }}>A note for you</p>
+            <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 14, color: COLORS.inkLight, lineHeight: 1.7, margin: "0 0 10px" }}>This tool was built with adults in mind, but what you're feeling is completely real and worth paying attention to. Lots of young people wonder the same things you're wondering — and recognising that something feels different is actually a really important first step.</p>
+            <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 14, color: COLORS.inkLight, lineHeight: 1.7, margin: "0 0 10px" }}>Please don't try to navigate this alone. Talk to someone you trust — a parent, a carer, an older sibling, or another adult in your life who makes you feel safe. You could also show them these results to help start that conversation.</p>
+            <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 14, color: COLORS.inkLight, lineHeight: 1.7, margin: 0 }}>If you'd like to take things further, a GP appointment — ideally with a parent or carer alongside you — is the right next step. ADHD in young people is well understood and there's lots of support available.</p>
           </div>
         </div>
       )}
@@ -953,9 +1001,7 @@ function ResultsScreen({ answers, context }) {
           <span style={{ fontSize: 24 }}>📝</span>
           <div>
             <p style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 17, fontWeight: 700, color: "#8D6E00", margin: "0 0 6px" }}>A note about your childhood scores</p>
-            <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 14, color: COLORS.inkLight, lineHeight: 1.6, margin: 0 }}>
-              ADHD requires symptoms to have been present before age 12, but your childhood section scored lower than your adult sections. Many people masked effectively in childhood, or had supportive environments. A professional assessment would explore this in more detail.
-            </p>
+            <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 14, color: COLORS.inkLight, lineHeight: 1.6, margin: 0 }}>ADHD requires symptoms to have been present before age 12, but your childhood section scored lower than your adult sections. Many people masked effectively in childhood, or had supportive environments. A professional assessment would explore this in more detail.</p>
           </div>
         </div>
       )}
@@ -965,9 +1011,7 @@ function ResultsScreen({ answers, context }) {
           <span style={{ fontSize: 24 }}>💜</span>
           <div>
             <p style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 17, fontWeight: 700, color: "#6B3FA0", margin: "0 0 6px" }}>A note for women with inattentive ADHD</p>
-            <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 14, color: COLORS.inkLight, lineHeight: 1.6, margin: 0 }}>
-              Research consistently shows that women are diagnosed with ADHD years later than men, on average. Inattentive symptoms are quieter and easier to miss. If a professional has ever dismissed your concerns, it may be worth seeking a specialist experienced with adult ADHD in women.
-            </p>
+            <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 14, color: COLORS.inkLight, lineHeight: 1.6, margin: 0 }}>Research consistently shows that women are diagnosed with ADHD years later than men, on average. Inattentive symptoms are quieter and easier to miss. If a professional has ever dismissed your concerns, it may be worth seeking a specialist experienced with adult ADHD in women.</p>
           </div>
         </div>
       )}
@@ -1072,8 +1116,7 @@ function ResultsScreen({ answers, context }) {
   );
 }
 
-
-// ─── ARTICLES DATA ───────────────────────────────────────────────────
+// ─── ARTICLES ────────────────────────────────────────────────────────
 
 const ARTICLES = [
   {
@@ -1188,8 +1231,6 @@ const ARTICLES = [
   },
 ];
 
-// ─── ARTICLE UI COMPONENTS ────────────────────────────────────────────
-
 function ArticlesLink({ onClick }) {
   const [hovered, setHovered] = React.useState(false);
   return (
@@ -1218,12 +1259,8 @@ function ArticleListScreen({ onSelectArticle, onBack }) {
       <button onClick={onBack} style={{ background: "none", border: "none", fontFamily: "'Lora', Georgia, serif", fontSize: 14, color: COLORS.muted, cursor: "pointer", padding: 0, marginBottom: 40, display: "flex", alignItems: "center", gap: 6 }}>
         ← Back to assessment
       </button>
-      <div style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 11, letterSpacing: "0.2em", color: COLORS.accent, textTransform: "uppercase", marginBottom: 16 }}>
-        ADHD Explained
-      </div>
-      <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: "clamp(32px, 5vw, 52px)", fontWeight: 700, color: COLORS.ink, lineHeight: 1.1, margin: "0 0 16px" }}>
-        Understanding ADHD
-      </h1>
+      <div style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 11, letterSpacing: "0.2em", color: COLORS.accent, textTransform: "uppercase", marginBottom: 16 }}>ADHD Explained</div>
+      <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: "clamp(32px, 5vw, 52px)", fontWeight: 700, color: COLORS.ink, lineHeight: 1.1, margin: "0 0 16px" }}>Understanding ADHD</h1>
       <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 17, lineHeight: 1.7, color: COLORS.muted, marginBottom: 48, maxWidth: 520 }}>
         Honest, research-grounded articles to help you understand how ADHD actually presents in adults — and what to do about it.
       </p>
@@ -1243,15 +1280,9 @@ function ArticleCard({ article, onClick }) {
       style={{ padding: "24px 4px", cursor: "pointer", borderBottom: `1px solid ${COLORS.warm}` }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16 }}>
         <div style={{ flex: 1 }}>
-          <h2 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 20, fontWeight: 700, color: hovered ? COLORS.accent : COLORS.ink, margin: "0 0 6px", lineHeight: 1.2, transition: "color 0.15s" }}>
-            {article.title}
-          </h2>
-          <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 14, color: COLORS.muted, margin: "0 0 10px", lineHeight: 1.5 }}>
-            {article.subtitle}
-          </p>
-          <span style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 12, color: COLORS.mutedLight, letterSpacing: "0.04em" }}>
-            {article.readTime}
-          </span>
+          <h2 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 20, fontWeight: 700, color: hovered ? COLORS.accent : COLORS.ink, margin: "0 0 6px", lineHeight: 1.2, transition: "color 0.15s" }}>{article.title}</h2>
+          <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 14, color: COLORS.muted, margin: "0 0 10px", lineHeight: 1.5 }}>{article.subtitle}</p>
+          <span style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 12, color: COLORS.mutedLight, letterSpacing: "0.04em" }}>{article.readTime}</span>
         </div>
         <span style={{ color: COLORS.accent, fontSize: 20, flexShrink: 0, marginTop: 2, transition: "transform 0.15s", transform: hovered ? "translateX(4px)" : "none", display: "inline-block" }}>→</span>
       </div>
@@ -1267,26 +1298,14 @@ function ArticleScreen({ articleId, onBack, onStartAssessment }) {
       <button onClick={onBack} style={{ background: "none", border: "none", fontFamily: "'Lora', Georgia, serif", fontSize: 14, color: COLORS.muted, cursor: "pointer", padding: 0, marginBottom: 40, display: "flex", alignItems: "center", gap: 6 }}>
         ← All articles
       </button>
-      <div style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 11, letterSpacing: "0.2em", color: COLORS.accent, textTransform: "uppercase", marginBottom: 20 }}>
-        {article.readTime}
-      </div>
-      <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: "clamp(28px, 5vw, 46px)", fontWeight: 700, color: COLORS.ink, lineHeight: 1.1, margin: "0 0 16px" }}>
-        {article.title}
-      </h1>
-      <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 18, lineHeight: 1.7, color: COLORS.muted, marginBottom: 48, borderBottom: `2px solid ${COLORS.warm}`, paddingBottom: 32 }}>
-        {article.subtitle}
-      </p>
+      <div style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 11, letterSpacing: "0.2em", color: COLORS.accent, textTransform: "uppercase", marginBottom: 20 }}>{article.readTime}</div>
+      <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: "clamp(28px, 5vw, 46px)", fontWeight: 700, color: COLORS.ink, lineHeight: 1.1, margin: "0 0 16px" }}>{article.title}</h1>
+      <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 18, lineHeight: 1.7, color: COLORS.muted, marginBottom: 48, borderBottom: `2px solid ${COLORS.warm}`, paddingBottom: 32 }}>{article.subtitle}</p>
       <div>
         {article.content.map((block, i) => {
-          if (block.type === "intro") return (
-            <p key={i} style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 18, lineHeight: 1.85, color: COLORS.inkLight, marginBottom: 32, fontWeight: 600 }}>{block.text}</p>
-          );
-          if (block.type === "heading") return (
-            <h2 key={i} style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 22, fontWeight: 700, color: COLORS.ink, margin: "40px 0 14px", lineHeight: 1.2 }}>{block.text}</h2>
-          );
-          if (block.type === "paragraph") return (
-            <p key={i} style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 17, lineHeight: 1.85, color: COLORS.inkLight, marginBottom: 22 }}>{block.text}</p>
-          );
+          if (block.type === "intro") return <p key={i} style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 18, lineHeight: 1.85, color: COLORS.inkLight, marginBottom: 32, fontWeight: 600 }}>{block.text}</p>;
+          if (block.type === "heading") return <h2 key={i} style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 22, fontWeight: 700, color: COLORS.ink, margin: "40px 0 14px", lineHeight: 1.2 }}>{block.text}</h2>;
+          if (block.type === "paragraph") return <p key={i} style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 17, lineHeight: 1.85, color: COLORS.inkLight, marginBottom: 22 }}>{block.text}</p>;
           if (block.type === "pullquote") return (
             <div key={i} style={{ margin: "36px 0", padding: "24px 32px", borderLeft: `4px solid ${COLORS.accent}`, background: COLORS.accentPale, borderRadius: "0 8px 8px 0" }}>
               <p style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 20, fontStyle: "italic", lineHeight: 1.65, color: COLORS.inkLight, margin: 0 }}>{block.text}</p>
@@ -1302,46 +1321,29 @@ function ArticleScreen({ articleId, onBack, onStartAssessment }) {
           style={{ background: COLORS.accent, color: "#fff", border: "none", borderRadius: 4, padding: "14px 28px", fontFamily: "'Playfair Display', Georgia, serif", fontSize: 16, fontWeight: 600, cursor: "pointer" }}
           onMouseOver={(e) => e.target.style.background = COLORS.accentLight}
           onMouseOut={(e) => e.target.style.background = COLORS.accent}>
-          Begin Assessment →
+          See if this sounds like you →
         </button>
       </div>
     </div>
   );
 }
 
-
-// ─── ENCOURAGEMENT SCREENS ───────────────────────────────────────────
-
 function EncourageScreen({ stage, onNext }) {
   const isEarly = stage === "early";
   return (
     <div style={{ maxWidth: 600, margin: "0 auto", padding: "80px 24px", textAlign: "center" }}>
-      <div style={{ fontSize: isEarly ? 48 : 44, marginBottom: 28 }}>
-        {isEarly ? "🧠" : "🏁"}
-      </div>
+      <div style={{ fontSize: isEarly ? 48 : 44, marginBottom: 28 }}>{isEarly ? "🧠" : "🏁"}</div>
       {isEarly ? (
         <>
-          <h2 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: "clamp(26px, 4vw, 38px)", fontWeight: 700, color: COLORS.ink, margin: "0 0 20px", lineHeight: 1.2 }}>
-            Finding this hard to focus on?
-          </h2>
-          <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 17, lineHeight: 1.8, color: COLORS.inkLight, marginBottom: 16, maxWidth: 480, margin: "0 auto 16px" }}>
-            That's actually worth noting. Difficulty sustaining attention on tasks — even ones you genuinely care about — is one of the core features of ADHD.
-          </p>
-          <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 16, lineHeight: 1.8, color: COLORS.muted, marginBottom: 40, maxWidth: 460, margin: "0 auto 40px" }}>
-            The irony of struggling to complete an ADHD assessment isn't lost on us. Keep going — the results are worth it, and what you share in the next few sections matters a lot.
-          </p>
+          <h2 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: "clamp(26px, 4vw, 38px)", fontWeight: 700, color: COLORS.ink, margin: "0 0 20px", lineHeight: 1.2 }}>Finding this hard to focus on?</h2>
+          <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 17, lineHeight: 1.8, color: COLORS.inkLight, marginBottom: 16, maxWidth: 480, margin: "0 auto 16px" }}>That's actually worth noting. Difficulty sustaining attention on tasks — even ones you genuinely care about — is one of the core features of ADHD.</p>
+          <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 16, lineHeight: 1.8, color: COLORS.muted, marginBottom: 40, maxWidth: 460, margin: "0 auto 40px" }}>The irony of struggling to complete an ADHD assessment isn't lost on us. Keep going — the results are worth it, and what you share in the next few sections matters a lot.</p>
         </>
       ) : (
         <>
-          <h2 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: "clamp(26px, 4vw, 38px)", fontWeight: 700, color: COLORS.ink, margin: "0 0 20px", lineHeight: 1.2 }}>
-            Nearly there
-          </h2>
-          <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 17, lineHeight: 1.8, color: COLORS.inkLight, marginBottom: 16, maxWidth: 480, margin: "0 auto 16px" }}>
-            One final section — and then your results are ready.
-          </p>
-          <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 16, lineHeight: 1.8, color: COLORS.muted, marginBottom: 40, maxWidth: 460, margin: "0 auto 40px" }}>
-            Everything you've answered so far is already being used to build your personal profile. This last part helps us give you the most complete picture possible.
-          </p>
+          <h2 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: "clamp(26px, 4vw, 38px)", fontWeight: 700, color: COLORS.ink, margin: "0 0 20px", lineHeight: 1.2 }}>Nearly there</h2>
+          <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 17, lineHeight: 1.8, color: COLORS.inkLight, marginBottom: 16, maxWidth: 480, margin: "0 auto 16px" }}>One final section — and then your results are ready.</p>
+          <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 16, lineHeight: 1.8, color: COLORS.muted, marginBottom: 40, maxWidth: 460, margin: "0 auto 40px" }}>Everything you've answered so far is already being used to build your personal profile. This last part helps us give you the most complete picture possible.</p>
         </>
       )}
       <button onClick={onNext}
@@ -1351,6 +1353,33 @@ function EncourageScreen({ stage, onNext }) {
         {isEarly ? "Keep going →" : "Final section →"}
       </button>
     </div>
+  );
+}
+
+function SiteFooter() {
+  return (
+    <footer style={{ borderTop: `2px solid ${COLORS.warm}`, padding: "40px 24px", textAlign: "center", marginTop: 40 }}>
+      <div style={{ maxWidth: 720, margin: "0 auto" }}>
+        <div style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 18, fontWeight: 700, color: COLORS.ink, marginBottom: 6 }}>
+          ADHD <span style={{ color: COLORS.accent, fontStyle: "italic" }}>Mirror</span>
+        </div>
+        <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 13, color: COLORS.muted, marginBottom: 20 }}>
+          A free, clinically-informed ADHD self-assessment for adults.
+        </p>
+        <div style={{ display: "flex", justifyContent: "center", gap: 24, flexWrap: "wrap", marginBottom: 20 }}>
+          {[{ label: "Privacy Policy", href: "/privacy" }, { label: "Terms of Service", href: "/terms" }].map(link => (
+            <a key={link.href} href={link.href} style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 13, color: COLORS.muted, textDecoration: "none", borderBottom: `1px solid ${COLORS.warm}`, paddingBottom: 1 }}
+              onMouseOver={e => { e.target.style.color = COLORS.accent; e.target.style.borderBottomColor = COLORS.accent; }}
+              onMouseOut={e => { e.target.style.color = COLORS.muted; e.target.style.borderBottomColor = COLORS.warm; }}>
+              {link.label}
+            </a>
+          ))}
+        </div>
+        <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 12, color: COLORS.mutedLight, lineHeight: 1.6, maxWidth: 560, margin: "0 auto" }}>
+          ADHD Mirror is a self-reflection tool only. It does not provide medical advice, a clinical diagnosis, or any form of professional assessment. Always consult a qualified healthcare professional.
+        </p>
+      </div>
+    </footer>
   );
 }
 
@@ -1386,7 +1415,6 @@ function App() {
   const goNext = () => {
     const next = Math.min(sectionIndex + 1, SECTIONS.length - 1);
     const nextSection = SECTIONS[next];
-    // Fire GA events at key funnel points
     if (sectionIndex === 0) trackEvent("assessment_started");
     if (nextSection && nextSection.type === "results") trackEvent("results_reached");
     if (nextSection && nextSection.type === "questions") trackEvent("section_started", { section_id: nextSection.id });
@@ -1402,9 +1430,10 @@ function App() {
       <div style={{ minHeight: "100vh", background: COLORS.cream }}>
         <style>{`* { box-sizing: border-box; } body { margin: 0; }`}</style>
         <ArticleListScreen
-          onSelectArticle={(id) => { setActiveArticleId(id); setView("article"); window.scrollTo(0,0); }}
-          onBack={() => { setView("assessment"); window.scrollTo(0,0); }}
+          onSelectArticle={(id) => { setActiveArticleId(id); setView("article"); window.scrollTo(0, 0); }}
+          onBack={() => { setView("assessment"); window.scrollTo(0, 0); }}
         />
+        <SiteFooter />
       </div>
     );
   }
@@ -1415,9 +1444,10 @@ function App() {
         <style>{`* { box-sizing: border-box; } body { margin: 0; }`}</style>
         <ArticleScreen
           articleId={activeArticleId}
-          onBack={() => { setView("article-list"); window.scrollTo(0,0); }}
-          onStartAssessment={() => { setView("assessment"); setSectionIndex(1); window.scrollTo(0,0); }}
+          onBack={() => { setView("article-list"); window.scrollTo(0, 0); }}
+          onStartAssessment={() => { setView("assessment"); setSectionIndex(1); window.scrollTo(0, 0); }}
         />
+        <SiteFooter />
       </div>
     );
   }
@@ -1427,13 +1457,14 @@ function App() {
       <style>{`* { box-sizing: border-box; } body { margin: 0; } button { outline: none; } button:focus-visible { outline: 2px solid ${COLORS.accent}; outline-offset: 2px; }`}</style>
       {showProgress && <ProgressBar current={sectionIndex - 1} total={questionSections.length} />}
       {currentSection.type === "intro" && <IntroScreen onStart={goNext} />}
-      {currentSection.type === "intro" && <ArticlesLink onClick={() => { setView("article-list"); window.scrollTo(0,0); }} />}
+      {currentSection.type === "intro" && <ArticlesLink onClick={() => { setView("article-list"); window.scrollTo(0, 0); }} />}
       {currentSection.type === "context" && <ContextScreen onNext={(ctx) => { setContext(ctx); goNext(); }} />}
       {currentSection.type === "encourage" && <EncourageScreen stage={currentSection.stage} onNext={goNext} />}
       {currentSection.type === "questions" && (
         <QuestionSection section={currentSection} answers={answers} onChange={handleAnswer} onNext={goNext} onBack={goBack} isLast={sectionIndex === SECTIONS.length - 2} />
       )}
       {currentSection.type === "results" && <ResultsScreen answers={answers} context={context} />}
+      <SiteFooter />
     </div>
   );
 }
