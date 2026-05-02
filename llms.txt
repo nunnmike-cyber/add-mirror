@@ -1,0 +1,62 @@
+# ADHD Mirror
+
+> A free, clinically-informed ADHD self-assessment for adults. Based on ASRS v1.1 Part A screening methodology developed by the WHO and Harvard Medical School.
+
+ADHD Mirror is a free tool that helps adults understand whether their experiences align with how ADHD presents clinically. It is not a diagnostic tool — it is a self-reflection and self-advocacy tool designed to help people have more informed conversations with their GP or psychiatrist.
+
+## What makes ADHD Mirror different
+
+- Uses a two-tier scoring system: a weighted core signal score across five symptom clusters, plus the ASRS Part A screen (7 questions most predictive of adult ADHD)
+- Includes a dedicated masking section — the coping behaviours that cause many people, particularly women, to score lower than their symptoms warrant
+- Applies masking as an upward score modifier when high, to account for suppressed symptom presentation
+- Covers emotional dysregulation, executive dysfunction, hyperfocus, and functional impairment — not just inattention and hyperactivity
+- Generates a GP-ready summary the user can download and take to a clinical appointment
+- Completely private — all scoring happens in the browser, nothing is stored or transmitted
+
+## Who it is for
+
+Adults who suspect they might have ADHD, have never been formally assessed, or feel that previous assessments did not capture the full picture. Particularly useful for:
+
+- Women and non-binary people with inattentive ADHD who have been overlooked by standard checklists
+- Adults seeking a late diagnosis
+- People who mask effectively and score low on simpler tools despite significant symptoms
+- Anyone wanting a GP-ready summary before their first appointment
+
+## Assessment structure
+
+The assessment covers seven sections:
+1. Childhood symptoms (before age 12)
+2. Focus and attention (past 6 months)
+3. Energy and impulse
+4. Coping and masking
+5. Emotions and relationships
+6. Functional impairment
+7. Differential screening (anxiety, depression, sleep, burnout)
+
+## Scoring methodology
+
+- Core signal: weighted across inattentive (40%), executive dysfunction (20%), hyperactive-impulsive (20%), emotional intensity (10%), hyperfocus (10%)
+- Part A screen: 7 ASRS-mapped questions; 4 or more scoring "Often" or "Always" = positive screen
+- Masking modifier: upward adjustment of 8–15 points applied when masking score is moderate or high
+- Likelihood output: Low, Moderate, or High — not a diagnosis
+
+## Articles
+
+ADHD Mirror includes a library of clinically-grounded articles:
+
+- [What is ADHD masking?](https://adhdmirror.com/articles/what-is-adhd-masking)
+- [ADHD in adults: why so many people are diagnosed late](https://adhdmirror.com/articles/adhd-in-adults-late-diagnosis)
+- [ADHD vs anxiety: how to tell the difference](https://adhdmirror.com/articles/adhd-vs-anxiety)
+- [What does an ADHD assessment actually involve?](https://adhdmirror.com/articles/what-does-adhd-assessment-involve)
+- [ADHD in women: why it looks different and gets missed](https://adhdmirror.com/articles/adhd-in-women)
+
+## Important disclaimer
+
+ADHD Mirror is a self-reflection tool only. It does not provide medical advice, a clinical diagnosis, or any form of professional assessment. Always consult a qualified healthcare professional.
+
+## URLs
+
+- Homepage / assessment: https://adhdmirror.com
+- Articles: https://adhdmirror.com/articles
+- Privacy policy: https://adhdmirror.com/privacy
+- Terms of service: https://adhdmirror.com/terms
