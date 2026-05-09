@@ -19,6 +19,47 @@ function ProgressBar({ current, total }) {
   );
 }
 
+// ── Share Button ──────────────────────────────────────────────────────────────
+function ShareButton({ style = {} }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleShare = async () => {
+    const shareData = {
+      title: 'ADHD Mirror — Free ADHD Self-Assessment',
+      text: 'A more honest ADHD self-assessment — covers masking, emotional experience, and how ADHD really presents in adults.',
+      url: 'https://adhdmirror.com',
+    };
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (_) {}
+    } else {
+      await navigator.clipboard.writeText('https://adhdmirror.com');
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  return (
+    <button
+      onClick={handleShare}
+      style={{
+        display: 'inline-flex', alignItems: 'center', gap: 8,
+        background: 'transparent', border: `1px solid ${COLORS.warm}`,
+        borderRadius: 4, padding: '10px 20px', cursor: 'pointer',
+        fontFamily: "'Lora', Georgia, serif", fontSize: 14,
+        color: COLORS.muted, transition: 'all 0.2s',
+        ...style,
+      }}
+      onMouseOver={e => { e.currentTarget.style.borderColor = COLORS.accent; e.currentTarget.style.color = COLORS.accent; }}
+      onMouseOut={e => { e.currentTarget.style.borderColor = COLORS.warm; e.currentTarget.style.color = COLORS.muted; }}
+    >
+      <span style={{ fontSize: 16 }}>↗</span>
+      {copied ? 'Link copied!' : 'Share this tool'}
+    </button>
+  );
+}
+
 // ── Report Preview (intro page) ───────────────────────────────────────────────
 function ReportPreview({ onStart }) {
   const bars = [
@@ -144,6 +185,13 @@ function IntroScreen({ onStart }) {
           <strong>Under 18?</strong> This tool was designed with adults in mind, but you're welcome to use it. If your results raise questions, please talk to a parent, carer, or another trusted adult.
         </p>
       </div>
+
+      {/* Share nudge */}
+      <div style={{ marginTop: 32, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+        <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 13, color: COLORS.mutedLight, margin: 0 }}>Know someone who might find this useful?</p>
+        <ShareButton />
+      </div>
+
       {/* Articles link */}
       <div style={{ marginTop: 48, borderTop: `1px solid ${COLORS.warm}`, paddingTop: 32 }}>
         <button onClick={() => router.push('/articles')}
