@@ -6,6 +6,54 @@ import {
   calculateImpairment, calculateDifferential
 } from '@/lib/scoring';
 
+// ── Share Button ──────────────────────────────────────────────────────────────
+function ShareButton() {
+  const [copied, setCopied] = useState(false);
+
+  const handleShare = async () => {
+    const shareData = {
+      title: 'ADHD Mirror — Free ADHD Self-Assessment',
+      text: 'A more honest ADHD self-assessment — covers masking, emotional experience, and how ADHD really presents in adults.',
+      url: 'https://adhdmirror.com',
+    };
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (_) {}
+    } else {
+      await navigator.clipboard.writeText('https://adhdmirror.com');
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  return (
+    <div style={{ marginTop: 16, padding: '20px 24px', background: COLORS.accentPale, border: `1px solid ${COLORS.accentLight}44`, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+      <div>
+        <p style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 15, fontWeight: 700, color: COLORS.ink, margin: '0 0 2px' }}>Know someone who might find this useful?</p>
+        <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 13, color: COLORS.muted, margin: 0 }}>Share ADHD Mirror with a friend or family member.</p>
+      </div>
+      <button
+        onClick={handleShare}
+        style={{
+          display: 'inline-flex', alignItems: 'center', gap: 8,
+          background: COLORS.accent, color: '#fff',
+          border: 'none', borderRadius: 4,
+          padding: '10px 20px', cursor: 'pointer',
+          fontFamily: "'Playfair Display', Georgia, serif",
+          fontSize: 14, fontWeight: 600,
+          transition: 'background 0.2s', flexShrink: 0,
+        }}
+        onMouseOver={e => e.currentTarget.style.background = COLORS.accentLight}
+        onMouseOut={e => e.currentTarget.style.background = COLORS.accent}
+      >
+        <span style={{ fontSize: 15 }}>↗</span>
+        {copied ? 'Link copied!' : 'Share this tool'}
+      </button>
+    </div>
+  );
+}
+
 // ── Narrative generator ───────────────────────────────────────────────────────
 function generateNarrative(clusterPct, context, scoring, answers) {
   const { inattentive = 0, hyperactive = 0, masking = 0, emotional = 0, executive = 0, hyperfocus = 0 } = clusterPct;
@@ -430,6 +478,9 @@ export default function ResultsScreen({ answers, context, onRestart }) {
             </button>
           </div>
         </div>
+
+        {/* Share nudge */}
+        <ShareButton />
       </div>
 
       <button onClick={onRestart} style={{ marginTop: 24, padding: '14px 28px', border: `2px solid ${COLORS.warm}`, borderRadius: 4, background: 'transparent', color: COLORS.muted, fontFamily: "'Lora', Georgia, serif", fontSize: 15, cursor: 'pointer' }}>
