@@ -1,12 +1,13 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { COLORS, SECTIONS, FREQUENCY_OPTIONS, GENDER_OPTIONS, AGE_OPTIONS } from '@/lib/constants';
 import {
   calculateClusterPercentages, calculateFullScore,
   calculateImpairment, calculateDifferential
 } from '@/lib/scoring';
 import ResultsScreen from './ResultsScreen';
+import PaywallScreen from './PaywallScreen';
 import SiteFooter from './SiteFooter';
 
 // ── Progress Bar ──────────────────────────────────────────────────────────────
@@ -185,14 +186,10 @@ function IntroScreen({ onStart }) {
           <strong>Under 18?</strong> This tool was designed with adults in mind, but you're welcome to use it. If your results raise questions, please talk to a parent, carer, or another trusted adult.
         </p>
       </div>
-
-      {/* Share nudge */}
       <div style={{ marginTop: 32, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
         <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 13, color: COLORS.mutedLight, margin: 0 }}>Know someone who might find this useful?</p>
         <ShareButton />
       </div>
-
-      {/* Articles link */}
       <div style={{ marginTop: 48, borderTop: `1px solid ${COLORS.warm}`, paddingTop: 32 }}>
         <button onClick={() => router.push('/articles')}
           style={{ background: 'transparent', border: `1px solid ${COLORS.warm}`, borderRadius: 8, padding: '18px 24px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14, width: '100%', textAlign: 'left' }}>
@@ -335,6 +332,56 @@ export default function AssessmentApp() {
   const [sectionIndex, setSectionIndex] = useState(0);
   const [answers, setAnswers] = useState({});
   const [context, setContext] = useState({});
+  const [unlocked, setUnlocked] = useState(false);
+  const [checkingToken, setCheckingToken] = useState(true);
+
+  const searchParams = useSearchParams();
+
+  // ── Check for payment return ──
+  useEffect(() => {
+    const payment = searchParams.get('payment');
+    const token = searchParams.get('token');
+
+    if (payment === 'success' && token) {
+      // Verify the token with our API
+      fetch('/api/verify-token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token }),
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.valid) {
+            setUnlocked(true);
+            // Store in sessionStorage so refresh doesn't lose it
+            sessionStorage.setItem('adhd_mirror_unlocked', token);
+            // Jump straight to results if we were mid-assessment
+            const savedIndex = sessionStorage.getItem('adhd_mirror_section');
+            const savedAnswers = sessionStorage.getItem('adhd_mirror_answers');
+            const savedContext = sessionStorage.getItem('adhd_mirror_context');
+            if (savedIndex) setSectionIndex(parseInt(savedIndex));
+            if (savedAnswers) setAnswers(JSON.parse(savedAnswers));
+            if (savedContext) setContext(JSON.parse(savedContext));
+          }
+          setCheckingToken(false);
+        })
+        .catch(() => setCheckingToken(false));
+    } else {
+      // Check if already unlocked this session
+      const storedToken = sessionStorage.getItem('adhd_mirror_unlocked');
+      if (storedToken) {
+        setUnlocked(true);
+      }
+      setCheckingToken(false);
+    }
+  }, [searchParams]);
+
+  // ── Save state to sessionStorage before Stripe redirect ──
+  const saveStateBeforeRedirect = () => {
+    sessionStorage.setItem('adhd_mirror_section', sectionIndex.toString());
+    sessionStorage.setItem('adhd_mirror_answers', JSON.stringify(answers));
+    sessionStorage.setItem('adhd_mirror_context', JSON.stringify(context));
+  };
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
@@ -363,6 +410,27 @@ export default function AssessmentApp() {
   const goBack = () => setSectionIndex((i) => Math.max(i - 1, 0));
   const showProgress = sectionIndex > 1 && sectionIndex < SECTIONS.length - 1;
 
+  const handleRestart = () => {
+    setAnswers({});
+    setContext({});
+    setUnlocked(false);
+    setSectionIndex(0);
+    sessionStorage.removeItem('adhd_mirror_unlocked');
+    sessionStorage.removeItem('adhd_mirror_section');
+    sessionStorage.removeItem('adhd_mirror_answers');
+    sessionStorage.removeItem('adhd_mirror_context');
+  };
+
+  if (checkingToken) {
+    return (
+      <div style={{ minHeight: '100vh', background: COLORS.cream, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 16, color: COLORS.muted }}>Loading your results…</p>
+      </div>
+    );
+  }
+
+  const isResultsSection = currentSection.type === 'results';
+
   return (
     <div style={{ minHeight: '100vh', background: COLORS.cream, fontFamily: "'Lora', Georgia, serif" }}>
       <style>{`* { box-sizing: border-box; } body { margin: 0; } button { outline: none; } button:focus-visible { outline: 2px solid ${COLORS.accent}; outline-offset: 2px; }`}</style>
@@ -373,7 +441,12 @@ export default function AssessmentApp() {
       {currentSection.type === 'questions' && (
         <QuestionSection section={currentSection} answers={answers} onChange={handleAnswer} onNext={goNext} onBack={goBack} isLast={sectionIndex === SECTIONS.length - 2} />
       )}
-      {currentSection.type === 'results' && <ResultsScreen answers={answers} context={context} onRestart={() => { setAnswers({}); setContext({}); setSectionIndex(0); }} />}
+      {isResultsSection && !unlocked && (
+        <PaywallScreen onUnlock={() => saveStateBeforeRedirect()} />
+      )}
+      {isResultsSection && unlocked && (
+        <ResultsScreen answers={answers} context={context} onRestart={handleRestart} />
+      )}
       <SiteFooter />
     </div>
   );
