@@ -16,7 +16,7 @@ export async function POST(request) {
         },
       ],
       mode: 'payment',
-      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/?payment=success&token={CHECKOUT_SESSION_ID}`,
+      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/report?payment=success&token={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/?payment=cancelled`,
       metadata: {
         sessionId,
