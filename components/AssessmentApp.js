@@ -342,8 +342,16 @@ export default function AssessmentApp() {
     const payment = searchParams.get('payment');
     const token = searchParams.get('token');
 
+    const restoreSavedState = () => {
+      const savedIndex = localStorage.getItem('adhd_mirror_section');
+      const savedAnswers = localStorage.getItem('adhd_mirror_answers');
+      const savedContext = localStorage.getItem('adhd_mirror_context');
+      if (savedAnswers) setAnswers(JSON.parse(savedAnswers));
+      if (savedContext) setContext(JSON.parse(savedContext));
+      if (savedIndex) setSectionIndex(parseInt(savedIndex));
+    };
+
     if (payment === 'success' && token) {
-      // Verify the token with our API
       fetch('/api/verify-token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -352,25 +360,18 @@ export default function AssessmentApp() {
         .then(res => res.json())
         .then(data => {
           if (data.valid) {
-            setUnlocked(true);
-            // Store in localStorage so refresh doesn't lose it
             localStorage.setItem('adhd_mirror_unlocked', token);
-            // Jump straight to results if we were mid-assessment
-            const savedIndex = localStorage.getItem('adhd_mirror_section');
-            const savedAnswers = localStorage.getItem('adhd_mirror_answers');
-            const savedContext = localStorage.getItem('adhd_mirror_context');
-            if (savedIndex) setSectionIndex(parseInt(savedIndex));
-            if (savedAnswers) setAnswers(JSON.parse(savedAnswers));
-            if (savedContext) setContext(JSON.parse(savedContext));
+            setUnlocked(true);
+            restoreSavedState();
           }
           setCheckingToken(false);
         })
         .catch(() => setCheckingToken(false));
     } else {
-      // Check if already unlocked this session
       const storedToken = localStorage.getItem('adhd_mirror_unlocked');
       if (storedToken) {
         setUnlocked(true);
+        restoreSavedState();
       }
       setCheckingToken(false);
     }
