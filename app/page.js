@@ -1,9 +1,9 @@
+import { Suspense } from 'react';
 import AssessmentApp from '@/components/AssessmentApp';
 
 export default function HomePage() {
   return (
     <>
-      {/* Real SEO content — server rendered, fully visible to Google */}
       <div style={{ position: 'absolute', width: '1px', height: '1px', overflow: 'hidden', clip: 'rect(0,0,0,0)', whiteSpace: 'nowrap' }} aria-hidden="true">
         <h1>Free ADHD Self-Assessment for Adults — ADHD Mirror</h1>
         <p>ADHD Mirror is a free, clinically-informed ADHD self-assessment tool for adults based on the ASRS v1.1 Part A screening methodology developed by the WHO and Harvard Medical School.</p>
@@ -14,7 +14,9 @@ export default function HomePage() {
         <h2>Getting an ADHD diagnosis in the UK</h2>
         <p>To get an ADHD diagnosis in the UK, speak to your GP first. ADHD Mirror generates a GP-ready summary to help you start that conversation.</p>
       </div>
-      <AssessmentApp />
+      <Suspense fallback={null}>
+        <AssessmentApp />
+      </Suspense>
     </>
   );
 }
