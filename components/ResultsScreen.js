@@ -282,7 +282,7 @@ function NextStep({ icon, title, body }) {
 }
 
 // ── Results Screen ────────────────────────────────────────────────────────────
-export default function ResultsScreen({ answers, context, onRestart }) {
+export default function ResultsScreen({ answers, context, onRestart, unlocked, onUnlockClick }) {
   const allQuestions = SECTIONS.filter((s) => s.type === 'questions').flatMap((s) => s.questions);
   const clusterPct = calculateClusterPercentages(answers, allQuestions);
   const scoring = calculateFullScore(answers);
@@ -478,10 +478,41 @@ export default function ResultsScreen({ answers, context, onRestart }) {
             </button>
           </div>
         </div>
-
-        {/* Share nudge */}
         <ShareButton />
       </div>
+
+      {/* ── Paid Report CTA ── */}
+      {!unlocked && (
+        <div style={{ marginTop: 48, background: COLORS.ink, borderRadius: 12, padding: '36px 40px' }}>
+          <p style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 11, letterSpacing: '0.2em', color: COLORS.accentLight, textTransform: 'uppercase', margin: '0 0 12px' }}>Unlock Your Full Report</p>
+          <h3 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 28, fontWeight: 700, color: '#F9F5EE', margin: '0 0 16px', lineHeight: 1.2 }}>There's more waiting for you</h3>
+          <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 16, color: '#D4C8B8', lineHeight: 1.7, margin: '0 0 24px' }}>Your full report includes your ADHD archetype, a three-word personal profile, a strengths reframe for every cluster, anxiety and mood screening, GP scripts, and a workplace rights guide — all as a downloadable PDF.</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 28 }}>
+            {[
+              '🪞 Your ADHD Archetype — a named profile that explains your pattern',
+              '✦ Your profile in three words — personal and shareable',
+              '💪 Strengths reframe — the other side of every cluster',
+              '😰 Anxiety & mood screening — GAD-7 and PHQ-9 built in',
+              '🩺 GP scripts — exact words to use in your appointment',
+              '⚖️ Workplace rights — reasonable adjustments and Access to Work',
+              '⬇️ Download as PDF — take it anywhere',
+            ].map(f => (
+              <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 14, color: '#D4C8B8', lineHeight: 1.5 }}>{f}</span>
+              </div>
+            ))}
+          </div>
+          <button
+            onClick={onUnlockClick}
+            style={{ background: COLORS.accent, color: '#fff', border: 'none', borderRadius: 4, padding: '16px 36px', fontFamily: "'Playfair Display', Georgia, serif", fontSize: 18, fontWeight: 600, cursor: 'pointer', width: '100%' }}
+            onMouseOver={e => e.currentTarget.style.background = COLORS.accentLight}
+            onMouseOut={e => e.currentTarget.style.background = COLORS.accent}
+          >
+            Unlock my full report — £3.99
+          </button>
+          <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 13, color: COLORS.mutedLight, marginTop: 12, textAlign: 'center' }}>🔒 Secure payment via Stripe · One-time only · No subscription</p>
+        </div>
+      )}
 
       <button onClick={onRestart} style={{ marginTop: 24, padding: '14px 28px', border: `2px solid ${COLORS.warm}`, borderRadius: 4, background: 'transparent', color: COLORS.muted, fontFamily: "'Lora', Georgia, serif", fontSize: 15, cursor: 'pointer' }}>
         ← Start over
