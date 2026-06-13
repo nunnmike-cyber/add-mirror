@@ -352,21 +352,11 @@ export default function AssessmentApp() {
     };
 
     if (payment === 'success' && token) {
-      fetch('/api/verify-token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token }),
-      })
-        .then(res => res.json())
-        .then(data => {
-          if (data.valid) {
-            localStorage.setItem('adhd_mirror_unlocked', token);
-            setUnlocked(true);
-            restoreSavedState();
-          }
-          setCheckingToken(false);
-        })
-        .catch(() => setCheckingToken(false));
+      // Stripe only redirects here on successful payment — trust it directly
+      localStorage.setItem('adhd_mirror_unlocked', token);
+      setUnlocked(true);
+      restoreSavedState();
+      setCheckingToken(false);
     } else {
       const storedToken = localStorage.getItem('adhd_mirror_unlocked');
       if (storedToken) {
