@@ -441,11 +441,21 @@ export default function AssessmentApp() {
       {currentSection.type === 'questions' && (
         <QuestionSection section={currentSection} answers={answers} onChange={handleAnswer} onNext={goNext} onBack={goBack} isLast={sectionIndex === SECTIONS.length - 2} />
       )}
-      {isResultsSection && !unlocked && (
-        <PaywallScreen onUnlock={() => saveStateBeforeRedirect()} />
-      )}
-      {isResultsSection && unlocked && (
-        <ResultsScreen answers={answers} context={context} onRestart={handleRestart} />
+      {isResultsSection && (
+        <ResultsScreen
+          answers={answers}
+          context={context}
+          onRestart={handleRestart}
+          unlocked={unlocked}
+          onUnlockClick={() => {
+            saveStateBeforeRedirect();
+            fetch('/api/checkout', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ sessionId: Date.now().toString() }),
+            }).then(r => r.json()).then(d => { if (d.url) window.location.href = d.url; });
+          }}
+        />
       )}
       <SiteFooter />
     </div>
