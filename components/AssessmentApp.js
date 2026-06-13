@@ -353,12 +353,12 @@ export default function AssessmentApp() {
         .then(data => {
           if (data.valid) {
             setUnlocked(true);
-            // Store in sessionStorage so refresh doesn't lose it
-            sessionStorage.setItem('adhd_mirror_unlocked', token);
+            // Store in localStorage so refresh doesn't lose it
+            localStorage.setItem('adhd_mirror_unlocked', token);
             // Jump straight to results if we were mid-assessment
-            const savedIndex = sessionStorage.getItem('adhd_mirror_section');
-            const savedAnswers = sessionStorage.getItem('adhd_mirror_answers');
-            const savedContext = sessionStorage.getItem('adhd_mirror_context');
+            const savedIndex = localStorage.getItem('adhd_mirror_section');
+            const savedAnswers = localStorage.getItem('adhd_mirror_answers');
+            const savedContext = localStorage.getItem('adhd_mirror_context');
             if (savedIndex) setSectionIndex(parseInt(savedIndex));
             if (savedAnswers) setAnswers(JSON.parse(savedAnswers));
             if (savedContext) setContext(JSON.parse(savedContext));
@@ -368,7 +368,7 @@ export default function AssessmentApp() {
         .catch(() => setCheckingToken(false));
     } else {
       // Check if already unlocked this session
-      const storedToken = sessionStorage.getItem('adhd_mirror_unlocked');
+      const storedToken = localStorage.getItem('adhd_mirror_unlocked');
       if (storedToken) {
         setUnlocked(true);
       }
@@ -376,11 +376,11 @@ export default function AssessmentApp() {
     }
   }, [searchParams]);
 
-  // ── Save state to sessionStorage before Stripe redirect ──
+  // ── Save state to localStorage before Stripe redirect ──
   const saveStateBeforeRedirect = () => {
-    sessionStorage.setItem('adhd_mirror_section', sectionIndex.toString());
-    sessionStorage.setItem('adhd_mirror_answers', JSON.stringify(answers));
-    sessionStorage.setItem('adhd_mirror_context', JSON.stringify(context));
+    localStorage.setItem('adhd_mirror_section', sectionIndex.toString());
+    localStorage.setItem('adhd_mirror_answers', JSON.stringify(answers));
+    localStorage.setItem('adhd_mirror_context', JSON.stringify(context));
   };
 
   useEffect(() => {
@@ -415,10 +415,10 @@ export default function AssessmentApp() {
     setContext({});
     setUnlocked(false);
     setSectionIndex(0);
-    sessionStorage.removeItem('adhd_mirror_unlocked');
-    sessionStorage.removeItem('adhd_mirror_section');
-    sessionStorage.removeItem('adhd_mirror_answers');
-    sessionStorage.removeItem('adhd_mirror_context');
+    localStorage.removeItem('adhd_mirror_unlocked');
+    localStorage.removeItem('adhd_mirror_section');
+    localStorage.removeItem('adhd_mirror_answers');
+    localStorage.removeItem('adhd_mirror_context');
   };
 
   if (checkingToken) {
