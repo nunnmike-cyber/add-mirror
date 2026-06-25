@@ -251,7 +251,7 @@ function QuestionRow({ question, value, onChange, index }) {
     <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '14px 16px', background: value !== undefined ? COLORS.accentPale : index % 2 === 0 ? COLORS.paper : 'transparent', borderRadius: 6, transition: 'background 0.15s', border: `1px solid ${value !== undefined ? COLORS.accentLight + '44' : 'transparent'}` }}>
       <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 15, color: COLORS.inkLight, lineHeight: 1.5, flex: 1, margin: 0, paddingRight: 16 }}>{question.text}</p>
       <div style={{ display: 'flex', gap: 4 }}>
-        {FREQUENCY_OPTIONS.map((opt) => {
+        {FREQUENCY_OPTIONS.map((opt, i) => {
           const selected = value === opt.value;
           const isHovered = hovered === opt.value;
           return (
@@ -259,7 +259,7 @@ function QuestionRow({ question, value, onChange, index }) {
               onMouseEnter={() => setHovered(opt.value)} onMouseLeave={() => setHovered(null)}
               title={opt.label}
               style={{ width: 32, height: 32, borderRadius: '50%', border: `2px solid ${selected ? COLORS.accent : isHovered ? COLORS.accentLight : COLORS.warm}`, background: selected ? COLORS.accent : isHovered ? COLORS.accentPale : 'transparent', cursor: 'pointer', transition: 'all 0.12s', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              {selected && <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#fff' }} />}
+              <span style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 12, fontWeight: 700, color: selected ? '#fff' : COLORS.mutedLight }}>{i + 1}</span>
             </button>
           );
         })}
@@ -275,13 +275,23 @@ function QuestionSection({ section, answers, onChange, onNext, onBack, isLast })
     <div style={{ maxWidth: 680, margin: '0 auto', padding: '60px 24px' }}>
       <div style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 11, letterSpacing: '0.2em', color: COLORS.accent, textTransform: 'uppercase', marginBottom: 12 }}>{section.label}</div>
       <h2 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 38, fontWeight: 700, color: COLORS.ink, margin: '0 0 10px', lineHeight: 1.1 }}>{section.title}</h2>
-      <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 16, color: COLORS.muted, lineHeight: 1.6, marginBottom: 40, maxWidth: 520 }}>{section.subtitle}</p>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 16, padding: '0 16px' }}>
+      <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 16, color: COLORS.muted, lineHeight: 1.6, marginBottom: 24, maxWidth: 520 }}>{section.subtitle}</p>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 20px', alignItems: 'center', padding: '14px 18px', background: COLORS.paper, border: `1px solid ${COLORS.warm}`, borderRadius: 8, marginBottom: 24 }}>
+        <span style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.muted }}>Scale</span>
+        {FREQUENCY_OPTIONS.map((f, i) => (
+          <div key={f.value} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ width: 18, height: 18, borderRadius: '50%', border: `2px solid ${COLORS.accentLight}`, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <span style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 10, fontWeight: 700, color: COLORS.accent }}>{i + 1}</span>
+            </span>
+            <span style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 13, color: COLORS.inkLight }}>{f.label}</span>
+          </div>
+        ))}
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 12, padding: '0 16px' }}>
         <div style={{ flex: 1 }} />
-        <div style={{ display: 'flex', gap: 4 }}>
-          {FREQUENCY_OPTIONS.map((f) => (
-            <div key={f.value} style={{ width: 32, textAlign: 'center', fontFamily: "'Lora', Georgia, serif", fontSize: 10, color: COLORS.mutedLight, letterSpacing: '0.04em', textTransform: 'uppercase' }}>{f.label}</div>
-          ))}
+        <div style={{ width: 176, display: 'flex', justifyContent: 'space-between' }}>
+          <span style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 10, color: COLORS.mutedLight, letterSpacing: '0.06em', textTransform: 'uppercase' }}>1 · {FREQUENCY_OPTIONS[0].label}</span>
+          <span style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 10, color: COLORS.mutedLight, letterSpacing: '0.06em', textTransform: 'uppercase' }}>5 · {FREQUENCY_OPTIONS[FREQUENCY_OPTIONS.length - 1].label}</span>
         </div>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
