@@ -446,13 +446,7 @@ export default function ResultsScreen({ answers, context, onRestart, unlocked, o
           <span style={{ fontSize: 28, flexShrink: 0 }}>🔒</span>
           <div style={{ flex: 1 }}>
             <h4 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 20, fontWeight: 700, color: COLORS.ink, margin: '0 0 8px' }}>Take this to your GP</h4>
-            <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 14, color: COLORS.muted, lineHeight: 1.6, margin: '0 0 20px' }}>A clean, downloadable GP-ready summary of your results — scores, cluster breakdown, and clinical context — is part of your full report.</p>
-            <button onClick={() => onUnlockClick('gp_teaser')}
-              style={{ background: COLORS.teal, color: '#fff', border: 'none', borderRadius: 4, padding: '14px 28px', fontFamily: "'Playfair Display', Georgia, serif", fontSize: 16, fontWeight: 600, cursor: 'pointer', transition: 'background 0.2s' }}
-              onMouseOver={(e) => e.currentTarget.style.background = COLORS.tealLight}
-              onMouseOut={(e) => e.currentTarget.style.background = COLORS.teal}>
-              Unlock GP Summary — £3.99
-            </button>
+            <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 14, color: COLORS.muted, lineHeight: 1.6, margin: 0 }}>A clean, downloadable GP-ready summary of your results — scores, cluster breakdown, and clinical context — is included in your full report.</p>
           </div>
         </div>
         <ShareButton />
