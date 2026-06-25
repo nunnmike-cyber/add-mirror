@@ -438,7 +438,10 @@ export default function AssessmentApp() {
           context={context}
           onRestart={handleRestart}
           unlocked={unlocked}
-          onUnlockClick={() => {
+          onUnlockClick={(source) => {
+            if (typeof window !== 'undefined' && window.gtag) {
+              window.gtag('event', 'unlock_cta_click', { cta_location: source || 'unknown' });
+            }
             saveStateBeforeRedirect();
             fetch('/api/checkout', {
               method: 'POST',
