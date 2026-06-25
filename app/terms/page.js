@@ -30,7 +30,11 @@ export default function TermsPage() {
           <p>While ADHD Mirror is designed to be clinically informed and thoughtful, no self-report screening tool is perfectly accurate. False positives and false negatives both occur. Only a qualified clinician can diagnose ADHD.</p>
           <h2 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 22, color: COLORS.ink, margin: '32px 0 12px' }}>Age</h2>
           <p>This tool is designed for adults. If you are under 18, please discuss any concerns with a parent, carer, or trusted adult before taking any action.</p>
-          <p style={{ marginTop: 32, color: COLORS.muted, fontSize: 14 }}>Last updated: 2025</p>
+          <h2 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 22, color: COLORS.ink, margin: '32px 0 12px' }}>The paid report</h2>
+          <p>For a one-time payment of £3.99, you can unlock a full report including your ADHD archetype, a personal three-word profile, a strengths reframe, anxiety and mood screening (GAD-7/PHQ-9), a GP-ready summary, GP conversation scripts, and workplace rights information. This is a single one-time purchase, not a subscription — you will not be charged again. Access to your report is tied to the browser you purchased it in; if you clear your browser data or switch devices you may lose access, so we recommend downloading a PDF copy for your records once you've unlocked it.</p>
+          <h2 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 22, color: COLORS.ink, margin: '32px 0 12px' }}>Refunds</h2>
+          <p>If you're not satisfied with your purchase, email us at <a href="mailto:privacy@adhdmirror.com" style={{ color: COLORS.accent }}>privacy@adhdmirror.com</a> within 14 days of purchase and we'll provide a full refund, no questions asked.</p>
+          <p style={{ marginTop: 32, color: COLORS.muted, fontSize: 14 }}>Last updated: June 2026</p>
         </div>
       </div>
       <SiteFooter />
