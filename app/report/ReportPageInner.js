@@ -250,40 +250,63 @@ export default function ReportPage() {
   const [reportData, setReportData] = useState(null);
 
   useEffect(() => {
-    const payment = searchParams.get('payment');
-    const token = searchParams.get('token');
+    let cancelled = false;
 
-    // Unlock and store token if coming from Stripe
-    if (payment === 'success' && token) {
-      localStorage.setItem('adhd_mirror_unlocked', token);
+    async function init() {
+      const payment = searchParams.get('payment');
+      const token = searchParams.get('token');
+
+      // Coming back from Stripe — verify with our server before unlocking anything.
+      // We never trust the URL token on its own.
+      if (payment === 'success' && token) {
+        try {
+          const res = await fetch('/api/verify-token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token }),
+          });
+          const data = await res.json();
+          if (data.valid) {
+            localStorage.setItem('adhd_mirror_unlocked', token);
+          }
+        } catch (err) {
+          console.error('Token verification failed:', err);
+        }
+      }
+
+      if (cancelled) return;
+
+      // Check unlock status
+      const storedToken = localStorage.getItem('adhd_mirror_unlocked');
+      if (!storedToken) {
+        router.push('/');
+        return;
+      }
+
+      // Restore answers and context
+      const savedAnswers = localStorage.getItem('adhd_mirror_answers');
+      const savedContext = localStorage.getItem('adhd_mirror_context');
+
+      if (!savedAnswers || !savedContext) {
+        router.push('/');
+        return;
+      }
+
+      const answers = JSON.parse(savedAnswers);
+      const context = JSON.parse(savedContext);
+      const allQuestions = SECTIONS.filter(s => s.type === 'questions').flatMap(s => s.questions);
+      const clusterPct = calculateClusterPercentages(answers, allQuestions);
+      const scoring = calculateFullScore(answers);
+      const impairment = calculateImpairment(answers);
+      const differentialFlags = calculateDifferential(answers);
+
+      if (cancelled) return;
+      setReportData({ answers, context, clusterPct, scoring, impairment, differentialFlags });
+      setReady(true);
     }
 
-    // Check unlock status
-    const storedToken = localStorage.getItem('adhd_mirror_unlocked');
-    if (!storedToken) {
-      router.push('/');
-      return;
-    }
-
-    // Restore answers and context
-    const savedAnswers = localStorage.getItem('adhd_mirror_answers');
-    const savedContext = localStorage.getItem('adhd_mirror_context');
-
-    if (!savedAnswers || !savedContext) {
-      router.push('/');
-      return;
-    }
-
-    const answers = JSON.parse(savedAnswers);
-    const context = JSON.parse(savedContext);
-    const allQuestions = SECTIONS.filter(s => s.type === 'questions').flatMap(s => s.questions);
-    const clusterPct = calculateClusterPercentages(answers, allQuestions);
-    const scoring = calculateFullScore(answers);
-    const impairment = calculateImpairment(answers);
-    const differentialFlags = calculateDifferential(answers);
-
-    setReportData({ answers, context, clusterPct, scoring, impairment, differentialFlags });
-    setReady(true);
+    init();
+    return () => { cancelled = true; };
   }, [searchParams, router]);
 
   if (!ready || !reportData) {
