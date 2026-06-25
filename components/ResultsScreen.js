@@ -54,6 +54,73 @@ function ShareButton() {
   );
 }
 
+// ── Paid Report CTA (reusable, tracks GA4 view + click) ───────────────────────
+function PaidCTA({ onUnlockClick, location, compact }) {
+  const trackedRef = (el) => {
+    if (!el || typeof window === 'undefined' || !('IntersectionObserver' in window)) return;
+    if (el._ctaObserved) return;
+    el._ctaObserved = true;
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          if (window.gtag) window.gtag('event', 'unlock_cta_view', { cta_location: location });
+          observer.disconnect();
+        }
+      });
+    }, { threshold: 0.5 });
+    observer.observe(el);
+  };
+
+  if (compact) {
+    return (
+      <div ref={trackedRef} style={{ marginTop: 32, background: COLORS.ink, borderRadius: 12, padding: '24px 28px', textAlign: 'center' }}>
+        <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 14, color: '#D4C8B8', margin: '0 0 14px' }}>Want your archetype, GP scripts, and a downloadable PDF? Unlock your full report.</p>
+        <button
+          onClick={() => onUnlockClick(location)}
+          style={{ background: COLORS.accent, color: '#fff', border: 'none', borderRadius: 4, padding: '14px 28px', fontFamily: "'Playfair Display', Georgia, serif", fontSize: 15, fontWeight: 600, cursor: 'pointer' }}
+          onMouseOver={e => e.currentTarget.style.background = COLORS.accentLight}
+          onMouseOut={e => e.currentTarget.style.background = COLORS.accent}
+        >
+          Unlock my full report — £3.99
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div ref={trackedRef} style={{ marginTop: 36, marginBottom: 36, background: COLORS.ink, borderRadius: 12, padding: '36px 40px' }}>
+      <p style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 11, letterSpacing: '0.2em', color: COLORS.accentLight, textTransform: 'uppercase', margin: '0 0 12px' }}>Unlock Your Full Report</p>
+      <h3 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 28, fontWeight: 700, color: '#F9F5EE', margin: '0 0 16px', lineHeight: 1.2 }}>There's more waiting for you</h3>
+      <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 16, color: '#D4C8B8', lineHeight: 1.7, margin: '0 0 24px' }}>Your full report includes your ADHD archetype, a three-word personal profile, a strengths reframe for every cluster, anxiety and mood screening, a GP-ready summary, GP scripts, and a workplace rights guide — all as a downloadable PDF.</p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 28 }}>
+        {[
+          '🪞 Your ADHD Archetype — a named profile that explains your pattern',
+          '✦ Your profile in three words — personal and shareable',
+          '💪 Strengths reframe — the other side of every cluster',
+          '😰 Anxiety & mood screening — GAD-7 and PHQ-9 built in',
+          '🩺 GP-ready summary — a clean download to take to your appointment',
+          '🗣️ GP scripts — exact words to use in your appointment',
+          '⚖️ Workplace rights — reasonable adjustments and Access to Work',
+          '⬇️ Download as PDF — take it anywhere',
+        ].map(f => (
+          <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 14, color: '#D4C8B8', lineHeight: 1.5 }}>{f}</span>
+          </div>
+        ))}
+      </div>
+      <button
+        onClick={() => onUnlockClick(location)}
+        style={{ background: COLORS.accent, color: '#fff', border: 'none', borderRadius: 4, padding: '16px 36px', fontFamily: "'Playfair Display', Georgia, serif", fontSize: 18, fontWeight: 600, cursor: 'pointer', width: '100%' }}
+        onMouseOver={e => e.currentTarget.style.background = COLORS.accentLight}
+        onMouseOut={e => e.currentTarget.style.background = COLORS.accent}
+      >
+        Unlock my full report — £3.99
+      </button>
+      <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 13, color: COLORS.mutedLight, marginTop: 12, textAlign: 'center' }}>🔒 Secure payment via Stripe · One-time only · No subscription</p>
+    </div>
+  );
+}
+
 // ── Narrative generator ───────────────────────────────────────────────────────
 function generateNarrative(clusterPct, context, scoring, answers) {
   const { inattentive = 0, hyperactive = 0, masking = 0, emotional = 0, executive = 0, hyperfocus = 0 } = clusterPct;
@@ -143,99 +210,7 @@ function PersonalNarrative({ clusterPct, context, scoring, answers }) {
   );
 }
 
-// ── GP Export ─────────────────────────────────────────────────────────────────
-function generateGPExport(clusterPct, scoring, context, typeLabel, impairment, differentialFlags) {
-  const { coreSignal, adjustedScore, partA, masking, likelihood, maskingApplied, maskingBoost, childhoodCaveat } = scoring;
-  const today = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-  const clusterRows = [
-    { label: 'Inattention', pct: clusterPct.inattentive || 0, typical: 20 },
-    { label: 'Executive Dysfunction', pct: clusterPct.executive || 0, typical: 22 },
-    { label: 'Hyperactivity', pct: clusterPct.hyperactive || 0, typical: 18 },
-    { label: 'Impulsivity', pct: clusterPct.impulsive || 0, typical: 15 },
-    { label: 'Emotional Intensity', pct: clusterPct.emotional || 0, typical: 25 },
-    { label: 'Hyperfocus', pct: clusterPct.hyperfocus || 0, typical: 28 },
-    { label: 'Masking & Compensation', pct: clusterPct.masking || 0, typical: 20 },
-  ];
-  const lc = likelihood === 'High' ? '#C4581A' : likelihood === 'Moderate' ? '#C47A00' : '#2A6B6B';
-  const lbg = likelihood === 'High' ? '#F5DDD0' : likelihood === 'Moderate' ? '#FFF3CC' : '#D0ECEC';
-  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>ADHD Screening Results — GP Summary</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Playfair+Display:wght@400;600;700&display=swap');
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Lora', Georgia, serif; color: #1A1410; background: #fff; padding: 40px; max-width: 700px; margin: 0 auto; }
-  h1 { font-family: 'Playfair Display', Georgia, serif; font-size: 28px; margin-bottom: 4px; }
-  h2 { font-family: 'Playfair Display', Georgia, serif; font-size: 20px; margin: 28px 0 12px; border-bottom: 2px solid #E8DCC8; padding-bottom: 6px; }
-  .subtitle { color: #8A7A68; font-size: 14px; margin-bottom: 24px; }
-  .verdict { background: ${lbg}; border: 2px solid ${lc}; border-radius: 8px; padding: 20px 24px; margin-bottom: 24px; }
-  .verdict-label { font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; color: ${lc}; }
-  .verdict-value { font-family: 'Playfair Display', Georgia, serif; font-size: 36px; font-weight: 700; color: ${lc}; }
-  .meta { display: flex; gap: 24px; flex-wrap: wrap; margin: 12px 0; }
-  .meta-item { font-size: 13px; color: #3D2E22; }
-  .meta-item strong { font-weight: 700; }
-  table { width: 100%; border-collapse: collapse; margin: 8px 0; }
-  th, td { text-align: left; padding: 8px 12px; font-size: 14px; }
-  th { background: #F2EBD9; font-weight: 700; border-bottom: 2px solid #E8DCC8; }
-  td { border-bottom: 1px solid #E8DCC8; }
-  .high { color: #C4581A; font-weight: 700; }
-  .moderate { color: #C47A00; font-weight: 700; }
-  .low { color: #2A6B6B; }
-  .note { background: #F9F5EE; border: 1px solid #E8DCC8; border-radius: 6px; padding: 14px 18px; margin: 12px 0; font-size: 13px; line-height: 1.6; color: #3D2E22; }
-  .footer { margin-top: 32px; padding-top: 16px; border-top: 1px solid #E8DCC8; font-size: 12px; color: #8A7A68; line-height: 1.6; }
-  @media print { body { padding: 20px; } .no-print { display: none; } }
-</style></head><body>
-<h1>ADHD Screening Results</h1>
-<p class="subtitle">Self-assessment summary for GP review — ${today}</p>
-<div class="verdict">
-  <div class="verdict-label">Overall ADHD Likelihood</div>
-  <div class="verdict-value">${likelihood}</div>
-  <div class="meta">
-    <div class="meta-item"><strong>Core signal:</strong> ${coreSignal}%</div>
-    <div class="meta-item"><strong>Adjusted score:</strong> ${adjustedScore}%${maskingApplied ? ` (+${maskingBoost} masking adjustment)` : ''}</div>
-    <div class="meta-item"><strong>Part A screen:</strong> ${partA.hits}/${partA.total} items at threshold (${partA.positive ? 'positive' : 'sub-threshold'})</div>
-    <div class="meta-item"><strong>Suggested presentation:</strong> ${typeLabel}</div>
-  </div>
-</div>
-<h2>Patient Context</h2>
-<div class="meta">
-  <div class="meta-item"><strong>Gender:</strong> ${context.gender || 'Not provided'}</div>
-  <div class="meta-item"><strong>Age range:</strong> ${context.age || 'Not provided'}</div>
-  <div class="meta-item"><strong>Prior diagnosis:</strong> ${context.diagnosed || 'Not provided'}</div>
-</div>
-<h2>Cluster Breakdown</h2>
-<table>
-  <tr><th>Cluster</th><th>Score</th><th>Typical adult range</th><th>Status</th></tr>
-  ${clusterRows.map(r => `<tr><td>${r.label}</td><td><strong>${r.pct}%</strong></td><td>~${r.typical}%</td><td class="${r.pct >= 65 ? 'high' : r.pct >= 40 ? 'moderate' : 'low'}">${r.pct >= 65 ? 'Elevated' : r.pct >= 40 ? 'Borderline' : 'Typical range'}</td></tr>`).join('')}
-</table>
-${maskingApplied ? `<div class="note"><strong>Masking note:</strong> This patient scored ${clusterPct.masking || 0}% on compensation/masking items. The adjusted score includes a ${maskingBoost}-point upward modifier.</div>` : ''}
-${childhoodCaveat ? `<div class="note"><strong>Childhood note:</strong> Childhood symptom scores were notably lower than adult scores. This warrants further clinical exploration.</div>` : ''}
-${context.gender === 'Woman' && (clusterPct.inattentive || 0) > (clusterPct.hyperactive || 0) + 15 ? `<div class="note"><strong>Gender note:</strong> This patient presents with a predominantly inattentive profile. Research consistently shows inattentive ADHD is underdiagnosed in women.</div>` : ''}
-<h2>Functional Impairment</h2>
-<div class="meta"><div class="meta-item"><strong>Impact level:</strong> ${impairment.level === 'significant' ? 'Significant' : impairment.level === 'moderate' ? 'Moderate' : 'Low'} (${impairment.pct}%)</div></div>
-<p style="font-size:13px;line-height:1.7;color:#3D2E22">${impairment.level === 'significant' ? 'Patient reports significant functional impairment across work, relationships, self-esteem, or daily responsibilities.' : impairment.level === 'moderate' ? 'Patient reports moderate functional impairment in some life areas.' : 'Patient reports relatively low functional impairment.'}</p>
-${differentialFlags.length > 0 ? `<h2>Differential / Comorbidity Flags</h2>
-<table><tr><th>Area</th><th>Signal</th><th>Clinical note</th></tr>
-${differentialFlags.map(f => `<tr><td><strong>${f.label}</strong></td><td class="${f.score === 4 ? 'high' : 'moderate'}">${f.score === 4 ? 'Strong' : 'Flagged'}</td><td style="font-size:12px">${f.desc}</td></tr>`).join('')}
-</table>
-<div class="note"><strong>Context:</strong> ADHD commonly co-occurs with anxiety (~53%), depression (~58%), and sleep disorders (~37%) in adults.</div>` : ''}
-<h2>Methodology</h2>
-<p style="font-size:13px;line-height:1.7;color:#3D2E22">Two-tier scoring: weighted core signal (inattentive 40%, executive 20%, hyperactive-impulsive 20%, emotional 10%, hyperfocus 10%). Part A screen counts items scoring "Often" or "Always" on 7 ASRS-mapped questions; 4+ of 7 = positive screen. Masking applied as upward modifier.</p>
-<div class="footer">
-  <p><strong>Important:</strong> This is a self-report screening tool, not a clinical diagnosis. ASRS v1.1 Part A has demonstrated sensitivity of 68.7% and specificity of 99.5% for DSM-IV ADHD (Kessler et al. 2005).</p>
-  <p style="margin-top:8px">Generated by ADHD Mirror — ${today}</p>
-</div>
-<div class="no-print" style="margin-top:24px;text-align:center">
-  <button onclick="window.print()" style="background:#2A6B6B;color:#fff;border:none;border-radius:4px;padding:12px 32px;font-family:'Playfair Display',Georgia,serif;font-size:16px;font-weight:600;cursor:pointer">Print this page</button>
-</div>
-</body></html>`;
-  const blob = new Blob([html], { type: 'text/html' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = 'ADHD-Screening-GP-Summary.html';
-  document.body.appendChild(a); a.click();
-  document.body.removeChild(a); URL.revokeObjectURL(url);
-}
 
-// ── Sub-components ────────────────────────────────────────────────────────────
 function ScoringPill({ label, value, highlight }) {
   return (
     <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: highlight ? COLORS.accentPale : COLORS.paper, border: `1px solid ${highlight ? COLORS.accentLight + '66' : COLORS.warm}`, borderRadius: 20, padding: '6px 14px' }}>
@@ -348,6 +323,8 @@ export default function ResultsScreen({ answers, context, onRestart, unlocked, o
           </p>
         </div>
       </div>
+
+      {!unlocked && <PaidCTA onUnlockClick={onUnlockClick} location="after_score" />}
 
       <PersonalNarrative clusterPct={clusterPct} context={context} scoring={scoring} answers={answers} />
 
@@ -463,56 +440,26 @@ export default function ResultsScreen({ answers, context, onRestart, unlocked, o
         </div>
       </div>
 
-      {/* GP Export */}
-      <div style={{ marginTop: 48, padding: '28px 32px', background: COLORS.paper, border: `2px solid ${COLORS.warm}`, borderRadius: 12 }}>
+      {/* GP Summary — locked teaser (moved to paid report) */}
+      <div style={{ marginTop: 48, padding: '28px 32px', background: COLORS.paper, border: `2px dashed ${COLORS.warm}`, borderRadius: 12, position: 'relative' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
-          <span style={{ fontSize: 28, flexShrink: 0 }}>🩺</span>
+          <span style={{ fontSize: 28, flexShrink: 0 }}>🔒</span>
           <div style={{ flex: 1 }}>
             <h4 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 20, fontWeight: 700, color: COLORS.ink, margin: '0 0 8px' }}>Take this to your GP</h4>
-            <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 14, color: COLORS.muted, lineHeight: 1.6, margin: '0 0 20px' }}>Download a clean summary of your results to print or share with a healthcare professional. It includes your scores, cluster breakdown, and relevant clinical context.</p>
-            <button onClick={() => generateGPExport(clusterPct, scoring, context, typeLabel, impairment, differentialFlags)}
+            <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 14, color: COLORS.muted, lineHeight: 1.6, margin: '0 0 20px' }}>A clean, downloadable GP-ready summary of your results — scores, cluster breakdown, and clinical context — is part of your full report.</p>
+            <button onClick={() => onUnlockClick('gp_teaser')}
               style={{ background: COLORS.teal, color: '#fff', border: 'none', borderRadius: 4, padding: '14px 28px', fontFamily: "'Playfair Display', Georgia, serif", fontSize: 16, fontWeight: 600, cursor: 'pointer', transition: 'background 0.2s' }}
               onMouseOver={(e) => e.currentTarget.style.background = COLORS.tealLight}
               onMouseOut={(e) => e.currentTarget.style.background = COLORS.teal}>
-              Download GP Summary
+              Unlock GP Summary — £3.99
             </button>
           </div>
         </div>
         <ShareButton />
       </div>
 
-      {/* ── Paid Report CTA ── */}
-      {!unlocked && (
-        <div style={{ marginTop: 48, background: COLORS.ink, borderRadius: 12, padding: '36px 40px' }}>
-          <p style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 11, letterSpacing: '0.2em', color: COLORS.accentLight, textTransform: 'uppercase', margin: '0 0 12px' }}>Unlock Your Full Report</p>
-          <h3 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 28, fontWeight: 700, color: '#F9F5EE', margin: '0 0 16px', lineHeight: 1.2 }}>There's more waiting for you</h3>
-          <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 16, color: '#D4C8B8', lineHeight: 1.7, margin: '0 0 24px' }}>Your full report includes your ADHD archetype, a three-word personal profile, a strengths reframe for every cluster, anxiety and mood screening, GP scripts, and a workplace rights guide — all as a downloadable PDF.</p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 28 }}>
-            {[
-              '🪞 Your ADHD Archetype — a named profile that explains your pattern',
-              '✦ Your profile in three words — personal and shareable',
-              '💪 Strengths reframe — the other side of every cluster',
-              '😰 Anxiety & mood screening — GAD-7 and PHQ-9 built in',
-              '🩺 GP scripts — exact words to use in your appointment',
-              '⚖️ Workplace rights — reasonable adjustments and Access to Work',
-              '⬇️ Download as PDF — take it anywhere',
-            ].map(f => (
-              <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 14, color: '#D4C8B8', lineHeight: 1.5 }}>{f}</span>
-              </div>
-            ))}
-          </div>
-          <button
-            onClick={onUnlockClick}
-            style={{ background: COLORS.accent, color: '#fff', border: 'none', borderRadius: 4, padding: '16px 36px', fontFamily: "'Playfair Display', Georgia, serif", fontSize: 18, fontWeight: 600, cursor: 'pointer', width: '100%' }}
-            onMouseOver={e => e.currentTarget.style.background = COLORS.accentLight}
-            onMouseOut={e => e.currentTarget.style.background = COLORS.accent}
-          >
-            Unlock my full report — £3.99
-          </button>
-          <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 13, color: COLORS.mutedLight, marginTop: 12, textAlign: 'center' }}>🔒 Secure payment via Stripe · One-time only · No subscription</p>
-        </div>
-      )}
+      {/* ── Paid Report CTA (compact reminder) ── */}
+      {!unlocked && <PaidCTA onUnlockClick={onUnlockClick} location="bottom" compact />}
 
       <button onClick={onRestart} style={{ marginTop: 24, padding: '14px 28px', border: `2px solid ${COLORS.warm}`, borderRadius: 4, background: 'transparent', color: COLORS.muted, fontFamily: "'Lora', Georgia, serif", fontSize: 15, cursor: 'pointer' }}>
         ← Start over
