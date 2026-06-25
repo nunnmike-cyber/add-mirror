@@ -276,10 +276,13 @@ function QuestionSection({ section, answers, onChange, onNext, onBack, isLast })
       <div style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 11, letterSpacing: '0.2em', color: COLORS.accent, textTransform: 'uppercase', marginBottom: 12 }}>{section.label}</div>
       <h2 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 38, fontWeight: 700, color: COLORS.ink, margin: '0 0 10px', lineHeight: 1.1 }}>{section.title}</h2>
       <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 16, color: COLORS.muted, lineHeight: 1.6, marginBottom: 40, maxWidth: 520 }}>{section.subtitle}</p>
-      <div style={{ display: 'flex', gap: 4, marginBottom: 16, justifyContent: 'flex-end' }}>
-        {FREQUENCY_OPTIONS.map((f) => (
-          <div key={f.value} style={{ flex: 1, textAlign: 'center', fontFamily: "'Lora', Georgia, serif", fontSize: 10, color: COLORS.mutedLight, letterSpacing: '0.04em', textTransform: 'uppercase' }}>{f.label}</div>
-        ))}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 16, padding: '0 16px' }}>
+        <div style={{ flex: 1 }} />
+        <div style={{ display: 'flex', gap: 4 }}>
+          {FREQUENCY_OPTIONS.map((f) => (
+            <div key={f.value} style={{ width: 32, textAlign: 'center', fontFamily: "'Lora', Georgia, serif", fontSize: 10, color: COLORS.mutedLight, letterSpacing: '0.04em', textTransform: 'uppercase' }}>{f.label}</div>
+          ))}
+        </div>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
         {section.questions.map((q, i) => (
