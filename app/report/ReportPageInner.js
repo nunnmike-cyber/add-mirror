@@ -761,14 +761,67 @@ export default function ReportPage() {
       <div style={{ maxWidth: 720, margin: '0 auto', padding: '60px 24px 100px' }}>
 
         {/* Header */}
-        <div style={{ marginBottom: 40, paddingBottom: 32, borderBottom: `2px solid ${COLORS.warm}` }}>
-          <span style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 13, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: COLORS.accent, marginBottom: 24, display: 'block' }}>ADHD Mirror</span>
+        <div style={{ marginBottom: 32, paddingBottom: 32, borderBottom: `2px solid ${COLORS.warm}` }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 24 }}>
+            <span style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 13, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: COLORS.accent }}>ADHD Mirror</span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: COLORS.tealPale, color: COLORS.teal, fontFamily: "'Lora', Georgia, serif", fontSize: 12.5, fontWeight: 600, padding: '6px 14px', borderRadius: 20 }}>
+              <span style={{ fontSize: 13 }}>✓</span> Full report unlocked
+            </span>
+          </div>
           <span style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase', color: COLORS.accent, display: 'block', marginBottom: 16 }}>Your Full Report</span>
           <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 36, fontWeight: 700, color: COLORS.ink, lineHeight: 1.2, marginBottom: 8 }}>Your Personal ADHD Report</h1>
           <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 13, color: COLORS.muted, marginTop: 6 }}>Completed {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })} · For your personal use and reflection</p>
         </div>
 
-        {/* Region switcher — doctor scripts, workplace rights, and crisis lines adapt */}
+        {/* Hero — archetype and personal narrative merged into one flowing panel,
+            rather than two near-identical dark boxes stacked back to back. This is
+            the first payoff a buyer sees, so it comes immediately after the header,
+            ahead of any utility UI (region switcher, table of contents). */}
+        <div className="card-block" style={{ background: COLORS.ink, borderRadius: 12, padding: '40px 40px 36px', marginBottom: 36, position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', top: 0, right: 0, width: 200, height: 200, borderRadius: '50%', background: COLORS.accent, opacity: 0.06, transform: 'translate(40px,-60px)' }} />
+          <div id="archetype">
+            <span style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase', color: COLORS.accentLight, marginBottom: 12, display: 'block' }}>{isLow ? 'Your Profile' : 'Your ADHD Archetype'}</span>
+            <h2 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 28, fontWeight: 700, color: '#F9F5EE', marginBottom: 16, lineHeight: 1.2 }}>{archetype.name}</h2>
+            <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 16, lineHeight: 1.8, color: '#D4C8B8', position: 'relative', zIndex: 1 }}>{archetype.body}</p>
+          </div>
+          <div style={{ height: 1, background: 'rgba(249,245,238,0.14)', margin: '32px 0 28px' }} />
+          <div id="narrative" style={{ position: 'relative' }}>
+            <div style={{ position: 'absolute', top: -8, left: -4, fontFamily: "'Playfair Display', Georgia, serif", fontSize: 90, lineHeight: 1, color: COLORS.accent, opacity: 0.15, pointerEvents: 'none', userSelect: 'none' }}>"</div>
+            <span style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 11, letterSpacing: '0.2em', color: COLORS.accentLight, textTransform: 'uppercase', marginBottom: 16, display: 'block' }}>Your Personal Profile</span>
+            <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 17, lineHeight: 1.8, color: '#F9F5EE', margin: 0, position: 'relative', zIndex: 1 }}>{narrative}</p>
+          </div>
+        </div>
+
+        {/* Three word profile — hidden when no cluster is meaningfully elevated */}
+        {threeWords && (
+          <div className="card-block" style={{ background: COLORS.accentPale, border: `2px solid ${COLORS.accent}`, borderRadius: 12, padding: '36px 40px', marginBottom: 36, textAlign: 'center' }}>
+            <span style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase', color: COLORS.accent, marginBottom: 20, display: 'block' }}>Your profile in three words</span>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap' }}>
+              {threeWords.map((word, i) => (
+                <span key={word}>
+                  <span style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 32, fontWeight: 700, color: COLORS.ink }}>{word}</span>
+                  {i < threeWords.length - 1 && <span style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 32, color: COLORS.accent, margin: '0 12px' }}>·</span>}
+                </span>
+              ))}
+            </div>
+            <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 14, color: COLORS.muted, marginTop: 16, fontStyle: 'italic' }}>Based on your strongest signals across seven clusters</p>
+          </div>
+        )}
+
+        {/* Slim likelihood recap — buyer has already seen the full version free */}
+        <div className="card-block" style={{ background: likelihoodBg, border: `2px solid ${likelihoodColor}`, borderRadius: 12, padding: '24px 28px', marginBottom: 36, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
+          <div>
+            <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 12, color: likelihoodColor, margin: '0 0 4px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>ADHD Likelihood · Recap</p>
+            <p style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 30, fontWeight: 700, color: likelihoodColor, margin: 0, lineHeight: 1.1 }}>{likelihood}</p>
+            <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 14, color: COLORS.inkLight, margin: '6px 0 0' }}>Suggested presentation: <strong>{typeLabel}</strong></p>
+          </div>
+          <div style={{ width: 74, height: 74, borderRadius: '50%', border: `4px solid ${likelihoodColor}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <span style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 21, fontWeight: 700, color: likelihoodColor }}>{adjustedScore}%</span>
+          </div>
+        </div>
+
+        {/* Region switcher — doctor scripts, workplace rights, and crisis lines adapt.
+            Utility UI, so it sits after the emotional payoff above, not before it. */}
         <div className="no-print card-block" style={{ background: COLORS.paper, border: `1px solid ${COLORS.warm}`, borderRadius: 10, padding: '16px 24px', marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <div>
             <p style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 14, fontWeight: 700, color: COLORS.ink, margin: '0 0 2px' }}>Where are you based?</p>
@@ -818,49 +871,6 @@ export default function ReportPage() {
                 <span style={{ color: COLORS.accent, marginRight: 6 }}>→</span>{label}
               </a>
             ))}
-          </div>
-        </div>
-
-        {/* Archetype — the first thing a buyer sees should be new, paid-only content */}
-        <div id="archetype" className="card-block" style={{ background: COLORS.ink, borderRadius: 12, padding: '36px 40px', marginBottom: 36, position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', top: 0, right: 0, width: 200, height: 200, borderRadius: '50%', background: COLORS.accent, opacity: 0.06, transform: 'translate(40px,-60px)' }} />
-          <span style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase', color: COLORS.accentLight, marginBottom: 12, display: 'block' }}>{isLow ? 'Your Profile' : 'Your ADHD Archetype'}</span>
-          <h2 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 28, fontWeight: 700, color: '#F9F5EE', marginBottom: 16, lineHeight: 1.2 }}>{archetype.name}</h2>
-          <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 16, lineHeight: 1.8, color: '#D4C8B8', position: 'relative', zIndex: 1 }}>{archetype.body}</p>
-        </div>
-
-        {/* Personal narrative — same card as the free results page */}
-        <div id="narrative" className="card-block" style={{ background: COLORS.ink, borderRadius: 12, padding: '36px 40px', marginBottom: 36, position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', top: 16, left: 24, fontFamily: "'Playfair Display', Georgia, serif", fontSize: 120, lineHeight: 1, color: COLORS.accent, opacity: 0.15, pointerEvents: 'none', userSelect: 'none' }}>"</div>
-          <p style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 11, letterSpacing: '0.2em', color: COLORS.accentLight, textTransform: 'uppercase', margin: '0 0 16px' }}>Your Personal Profile</p>
-          <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 18, lineHeight: 1.8, color: '#F9F5EE', margin: 0, position: 'relative', zIndex: 1 }}>{narrative}</p>
-        </div>
-
-        {/* Three word profile — hidden when no cluster is meaningfully elevated */}
-        {threeWords && (
-          <div className="card-block" style={{ background: COLORS.accentPale, border: `2px solid ${COLORS.accent}`, borderRadius: 12, padding: '36px 40px', marginBottom: 36, textAlign: 'center' }}>
-            <span style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase', color: COLORS.accent, marginBottom: 20, display: 'block' }}>Your profile in three words</span>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap' }}>
-              {threeWords.map((word, i) => (
-                <span key={word}>
-                  <span style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 32, fontWeight: 700, color: COLORS.ink }}>{word}</span>
-                  {i < threeWords.length - 1 && <span style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 32, color: COLORS.accent, margin: '0 12px' }}>·</span>}
-                </span>
-              ))}
-            </div>
-            <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 14, color: COLORS.muted, marginTop: 16, fontStyle: 'italic' }}>Based on your strongest signals across seven clusters</p>
-          </div>
-        )}
-
-        {/* Slim likelihood recap — buyer has already seen the full version free */}
-        <div className="card-block" style={{ background: likelihoodBg, border: `2px solid ${likelihoodColor}`, borderRadius: 12, padding: '24px 28px', marginBottom: 36, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
-          <div>
-            <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 12, color: likelihoodColor, margin: '0 0 4px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>ADHD Likelihood · Recap</p>
-            <p style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 30, fontWeight: 700, color: likelihoodColor, margin: 0, lineHeight: 1.1 }}>{likelihood}</p>
-            <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 14, color: COLORS.inkLight, margin: '6px 0 0' }}>Suggested presentation: <strong>{typeLabel}</strong></p>
-          </div>
-          <div style={{ width: 74, height: 74, borderRadius: '50%', border: `4px solid ${likelihoodColor}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <span style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 21, fontWeight: 700, color: likelihoodColor }}>{adjustedScore}%</span>
           </div>
         </div>
 
