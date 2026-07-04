@@ -419,12 +419,13 @@ export default function ReportPage() {
 
       if (cancelled) return;
 
-      // Vercel preview deployments have "-git-" in the hostname (e.g.
-      // adhdmirror-git-preview-report-yourteam.vercel.app). On those, skip the
-      // paywall so new versions of this page can be checked before going live.
-      // Production domains (adhdmirror.com, www.adhdmirror.com, and the plain
-      // project .vercel.app alias) never match, so the live paywall is unaffected.
-      const isPreviewDeploy = typeof window !== 'undefined' && window.location.hostname.includes('-git-');
+      // Vercel marks every non-production build with NEXT_PUBLIC_VERCEL_ENV =
+      // 'preview' at build time, so this covers all preview URLs (branch URLs
+      // and unique deployment URLs alike). The hostname check is a fallback.
+      // Production builds are never marked 'preview', so the live paywall is
+      // unaffected.
+      const isPreviewDeploy = process.env.NEXT_PUBLIC_VERCEL_ENV === 'preview' ||
+        (typeof window !== 'undefined' && window.location.hostname.includes('-git-'));
 
       // Check unlock status — and re-verify the stored token server-side on
       // every load, so a hand-typed or expired localStorage value doesn't unlock
