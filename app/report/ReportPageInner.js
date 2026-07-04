@@ -773,31 +773,23 @@ export default function ReportPage() {
           <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 13, color: COLORS.muted, marginTop: 6 }}>Completed {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })} · For your personal use and reflection</p>
         </div>
 
-        {/* Three word profile — the single most dramatic moment in the report,
-            so it leads. Hidden when no cluster is meaningfully elevated. Richer
-            treatment than a standard card: soft radial glow, ornamental dividers,
-            italic display type, and two colour-blurred accents for depth. */}
+        {/* Three word profile — leads the report since it's the most immediate
+            payoff. Drama comes from scale and placement, not ornament: flat
+            colour and a single subtle accent circle, matching how the rest of
+            the report handles emphasis (see the hero card below). */}
         {threeWords && (
-          <div className="card-block" style={{
-            position: 'relative', overflow: 'hidden', textAlign: 'center',
-            background: 'radial-gradient(circle at 50% 0%, #FDEEE2 0%, #F5DDD0 60%, #F0D2C0 100%)',
-            border: `1px solid ${COLORS.accent}40`, borderRadius: 20,
-            padding: '52px 36px 46px', marginBottom: 36,
-            boxShadow: '0 12px 40px rgba(196,88,26,0.14)',
-          }}>
-            <div style={{ position: 'absolute', top: -50, left: -40, width: 180, height: 180, borderRadius: '50%', background: COLORS.accent, opacity: 0.10, pointerEvents: 'none' }} />
-            <div style={{ position: 'absolute', bottom: -60, right: -30, width: 200, height: 200, borderRadius: '50%', background: COLORS.teal, opacity: 0.08, pointerEvents: 'none' }} />
-            <span style={{ position: 'relative', zIndex: 1, fontFamily: "'Playfair Display', Georgia, serif", fontSize: 12, letterSpacing: '0.25em', textTransform: 'uppercase', color: COLORS.accent, marginBottom: 24, display: 'block' }}>✦ Your Profile in Three Words ✦</span>
-            <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', rowGap: 10 }}>
+          <div className="card-block" style={{ position: 'relative', overflow: 'hidden', textAlign: 'center', background: COLORS.accentPale, border: `2px solid ${COLORS.accent}`, borderRadius: 12, padding: '44px 40px', marginBottom: 36 }}>
+            <div style={{ position: 'absolute', top: 0, right: 0, width: 180, height: 180, borderRadius: '50%', background: COLORS.accent, opacity: 0.06, transform: 'translate(50px,-70px)', pointerEvents: 'none' }} />
+            <span style={{ position: 'relative', fontFamily: "'Playfair Display', Georgia, serif", fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase', color: COLORS.accent, marginBottom: 22, display: 'block' }}>Your profile in three words</span>
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', rowGap: 8 }}>
               {threeWords.map((word, i) => (
-                <span key={word} style={{ display: 'inline-flex', alignItems: 'center' }}>
-                  <span style={{ fontFamily: "'Playfair Display', Georgia, serif", fontStyle: 'italic', fontSize: 'clamp(30px, 6vw, 42px)', fontWeight: 700, color: COLORS.ink, letterSpacing: '-0.01em' }}>{word}</span>
-                  {i < threeWords.length - 1 && <span style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 20, color: COLORS.accent, margin: '0 16px', opacity: 0.7 }}>✦</span>}
+                <span key={word}>
+                  <span style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 38, fontWeight: 700, color: COLORS.ink }}>{word}</span>
+                  {i < threeWords.length - 1 && <span style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 32, color: COLORS.accent, margin: '0 14px' }}>·</span>}
                 </span>
               ))}
             </div>
-            <div style={{ position: 'relative', zIndex: 1, width: 48, height: 2, background: COLORS.accent, opacity: 0.4, margin: '24px auto 18px', borderRadius: 2 }} />
-            <p style={{ position: 'relative', zIndex: 1, fontFamily: "'Lora', Georgia, serif", fontSize: 14, color: COLORS.inkLight, fontStyle: 'italic', margin: 0 }}>Based on your strongest signals across seven clusters</p>
+            <p style={{ position: 'relative', fontFamily: "'Lora', Georgia, serif", fontSize: 14, color: COLORS.muted, marginTop: 18, fontStyle: 'italic' }}>Based on your strongest signals across seven clusters</p>
           </div>
         )}
 
