@@ -179,6 +179,69 @@ function getArchetype(clusterPct, likelihood, isWomanOrNB) {
   };
 }
 
+// ── Personal narrative ─────────────────────────────────────────────────────────
+// The same personalised paragraph shown on the free results page, brought into
+// the paid report so the "this really gets me" moment lives here too, not just
+// on the page the person already saw before paying.
+function generateNarrative(clusterPct, context, scoring, answers) {
+  const { inattentive = 0, hyperactive = 0, masking = 0, emotional = 0, executive = 0, hyperfocus = 0 } = clusterPct;
+  const { likelihood, partA, maskingApplied, maskingBoost, childhoodCaveat } = scoring;
+  const diffFlags = calculateDifferential(answers);
+  const imp = calculateImpairment(answers);
+  const isWoman = context.gender === 'Woman';
+  const isNonBinary = context.gender === 'Non-binary / other';
+  const highMasking = masking >= 60;
+  const highEmotional = emotional >= 60;
+  const highExecutive = executive >= 60;
+  const highHyperfocus = hyperfocus >= 60;
+  const highInattentive = inattentive >= 60;
+  const highHyperactive = hyperactive >= 60;
+  const neverDiagnosed = context.diagnosed === 'No, never';
+  const suspectsDiagnosis = context.diagnosed === 'I suspect I might have it';
+  const parts = [];
+
+  if (likelihood === 'High') {
+    if (highMasking && (isWoman || isNonBinary)) parts.push("What stands out most in your answers isn't just the symptoms themselves — it's how much energy you appear to spend managing them.");
+    else if (highMasking) parts.push("Your results paint a picture of someone who has spent a long time finding ways to cope, often successfully enough that others may never have noticed the effort involved.");
+    else if (highInattentive && !highHyperactive) parts.push("Your responses suggest a mind that works differently — one that struggles to find traction on things that don't capture it, while being capable of deep absorption when something does.");
+    else parts.push("Across the areas we looked at, your answers align closely with how ADHD typically shows up in adults.");
+  } else if (likelihood === 'Moderate') {
+    parts.push("Your answers tell a mixed story — some areas show a strong pattern, while others are less pronounced — which is actually quite common, and doesn't mean your experiences aren't real.");
+  } else {
+    parts.push("While your results don't strongly point toward ADHD, that doesn't mean everything you're experiencing is simply 'normal' — and it's worth paying attention to the areas where you did score higher.");
+  }
+
+  if (partA.positive) parts.push(`On the seven questions most strongly linked to adult ADHD in clinical research, you scored at a significant level on ${partA.hits} of them — which meets the threshold for a positive screen on the WHO's adult ADHD scale.`);
+  else if (partA.hits >= 3) parts.push(`You scored at a significant level on ${partA.hits} of the seven questions most strongly linked to adult ADHD — just below the clinical screening threshold, but enough to suggest these difficulties are real and worth taking seriously.`);
+
+  if (highInattentive && highHyperactive) parts.push("You show signs of both the inattentive and hyperactive sides of ADHD — the internal restlessness and the difficulty holding focus can be an exhausting combination, even if it isn't always visible to others.");
+  else if (highInattentive && !highHyperactive) parts.push("Your profile leans heavily toward the inattentive presentation — sometimes called ADD — where the struggle isn't so much about energy as it is about finding the mental traction to start, sustain, and finish things.");
+  else if (highHyperactive && !highInattentive) parts.push("Your restlessness and impulsivity come through clearly — the kind of internal hum that's hard to explain to people who don't experience it.");
+
+  if (maskingApplied && maskingBoost > 0) parts.push(`Your high masking score is significant — it suggests your raw symptom scores may understate the real picture. We've adjusted your overall score upward by ${maskingBoost} points to account for this.`);
+  else if (highMasking && !maskingApplied) parts.push("Your masking score is notable — the effort you put into appearing on top of things is real, and it means the full weight of your symptoms may not be visible, even to yourself.");
+
+  if (highEmotional && highExecutive) parts.push("Two things particularly stand out: the intensity with which you experience emotions, and the executive dysfunction — the paralysis, the time blindness — which is often one of the most impairing aspects of ADHD in adults.");
+  else if (highEmotional) parts.push("The emotional intensity you described — the way criticism lands harder, the feeling that your reactions are bigger than the situation — is a genuine and often overlooked part of ADHD.");
+  else if (highExecutive) parts.push("The executive dysfunction piece — the procrastination that feels like paralysis, the time blindness — came through clearly and is often one of the most impairing aspects of ADHD in adults.");
+
+  if (childhoodCaveat) parts.push("One thing worth noting: your childhood scores were relatively low compared to your adult scores. This could mean several things — effective early masking, a supportive environment, or symptoms that emerged later — and it's something a professional assessment would explore further.");
+
+  if (imp.level === 'significant' && likelihood === 'High') parts.push("Importantly, these aren't just abstract symptoms — you've described real impact on your work, relationships, or how you feel about yourself, which is exactly what clinicians look for alongside the symptom picture.");
+  else if (imp.level === 'low' && likelihood === 'High') parts.push("Interestingly, while your symptom scores are high, your reported day-to-day impact is lower — which could mean your coping strategies are working hard behind the scenes.");
+
+  if (diffFlags.length >= 2 && likelihood === 'High') parts.push("It's also worth knowing that you flagged in several areas that commonly co-exist with ADHD — including " + diffFlags.map(f => f.label.toLowerCase()).join(" and ") + ". This doesn't weaken your ADHD result; these conditions frequently travel together.");
+  else if (diffFlags.length >= 2 && likelihood !== 'High') parts.push("You also flagged in areas beyond ADHD — including " + diffFlags.map(f => f.label.toLowerCase()).join(" and ") + " — which can produce symptoms that look a lot like ADHD.");
+  else if (diffFlags.length === 1 && likelihood === 'Low') parts.push("Your " + diffFlags[0].label.toLowerCase() + " flag is worth paying attention to — it could be contributing to the focus and energy difficulties you're experiencing.");
+
+  if ((isWoman || isNonBinary) && highInattentive && neverDiagnosed) parts.push(`As ${isWoman ? "a woman" : "someone"} who has never been diagnosed, it's worth knowing that inattentive ADHD is systematically underdiagnosed in people who aren't male — often because the symptoms are quieter, better masked, and easier to explain away.`);
+  else if (highHyperfocus && likelihood !== 'Low') parts.push("The flip side of your attention difficulties also came through — that capacity for deep, absorbing focus when something captures you is real, and often the part of ADHD that people find hardest to believe sits alongside the struggles.");
+  else if (suspectsDiagnosis && likelihood === 'High') parts.push("If you've suspected this for a while, your instincts appear to have been worth listening to — and these results give you something concrete to take to a professional.");
+  else if (likelihood === 'Low') parts.push("It may be worth exploring whether anxiety, burnout, or disrupted sleep could be at the root of what you're experiencing — all of which can look remarkably similar to ADHD.");
+
+  return parts.join(' ');
+}
+
 // ── Three word profile ────────────────────────────────────────────────────────
 // Returns null when no cluster is meaningfully elevated, so the card can be
 // hidden rather than labelling a low-scoring profile with words that don't fit.
@@ -610,10 +673,11 @@ export default function ReportPage() {
     );
   }
 
-  const { context, clusterPct, scoring, impairment, differentialFlags } = reportData;
+  const { context, clusterPct, scoring, impairment, differentialFlags, answers } = reportData;
   const { likelihood, adjustedScore, coreSignal, partA, maskingApplied, maskingBoost } = scoring;
   const isWomanOrNB = context.gender === 'Woman' || context.gender === 'Non-binary / other';
   const archetype = getArchetype(clusterPct, likelihood, isWomanOrNB);
+  const narrative = generateNarrative(clusterPct, context, scoring, answers);
   const genderSection = isWomanOrNB ? getGenderSection(likelihood, clusterPct) : null;
   const threeWords = getThreeWords(clusterPct);
   const R = REGIONS[region] || REGIONS.intl;
@@ -675,13 +739,22 @@ export default function ReportPage() {
         html { scroll-behavior: smooth; }
         body { margin: 0; }
         @keyframes spin { to { transform: rotate(360deg); } }
-        .card-block { page-break-inside: avoid; break-inside: avoid; }
+        .card-block { page-break-inside: avoid; break-inside: avoid-page; }
         .print-only { display: none; }
         @media print {
           .no-print { display: none !important; }
           .print-only { display: block !important; }
           body { background: #fff; }
           * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          /* Flex containers don't reliably support break-inside on their
+             children in any browser's print engine — that's what was causing
+             cards to split across pages despite .card-block's rule above.
+             Switching these stacks to block layout for print only (and
+             restoring the visual spacing via margin, since gap does nothing
+             on block layout) lets each card fragment as a single unit. */
+          .stack-list { display: block !important; }
+          .stack-list > * { margin-bottom: 14px; }
+          .stack-list > *:last-child { margin-bottom: 0; }
         }
       `}</style>
 
@@ -729,6 +802,7 @@ export default function ReportPage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '6px 24px' }}>
             {[
               ['#archetype', 'Your archetype'],
+              ['#narrative', 'Your personal profile'],
               ['#strengths', 'Your strengths'],
               ...(genderSection ? [['#gender', 'Understanding this pattern']] : []),
               ['#plan', 'Your next 30 days'],
@@ -753,6 +827,13 @@ export default function ReportPage() {
           <span style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase', color: COLORS.accentLight, marginBottom: 12, display: 'block' }}>{isLow ? 'Your Profile' : 'Your ADHD Archetype'}</span>
           <h2 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 28, fontWeight: 700, color: '#F9F5EE', marginBottom: 16, lineHeight: 1.2 }}>{archetype.name}</h2>
           <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 16, lineHeight: 1.8, color: '#D4C8B8', position: 'relative', zIndex: 1 }}>{archetype.body}</p>
+        </div>
+
+        {/* Personal narrative — same card as the free results page */}
+        <div id="narrative" className="card-block" style={{ background: COLORS.ink, borderRadius: 12, padding: '36px 40px', marginBottom: 36, position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', top: 16, left: 24, fontFamily: "'Playfair Display', Georgia, serif", fontSize: 120, lineHeight: 1, color: COLORS.accent, opacity: 0.15, pointerEvents: 'none', userSelect: 'none' }}>"</div>
+          <p style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 11, letterSpacing: '0.2em', color: COLORS.accentLight, textTransform: 'uppercase', margin: '0 0 16px' }}>Your Personal Profile</p>
+          <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 18, lineHeight: 1.8, color: '#F9F5EE', margin: 0, position: 'relative', zIndex: 1 }}>{narrative}</p>
         </div>
 
         {/* Three word profile — hidden when no cluster is meaningfully elevated */}
@@ -787,7 +868,7 @@ export default function ReportPage() {
         <div id="strengths" style={{ marginBottom: 48 }}>
           <h2 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 24, fontWeight: 700, color: COLORS.ink, marginBottom: 8 }}>Your strengths — the other side of the picture</h2>
           <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 15, color: COLORS.muted, lineHeight: 1.7, maxWidth: 560, marginBottom: 24 }}>The same traits that make certain things harder also show up differently in other contexts. These aren't consolation prizes — they're genuine cognitive assets.</p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div className="stack-list" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {strengthClusters.map((c) => {
               const s = STRENGTHS[c.key];
               return (
@@ -809,7 +890,7 @@ export default function ReportPage() {
           <div id="gender" style={{ marginBottom: 48 }}>
             <h2 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 24, fontWeight: 700, color: COLORS.ink, marginBottom: 8 }}>Understanding this pattern</h2>
             <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 15, color: COLORS.muted, lineHeight: 1.7, maxWidth: 560, marginBottom: 24 }}>{genderSection.intro}</p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div className="stack-list" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               {genderSection.points.map((pt) => (
                 <div key={pt.title} className="card-block" style={{ padding: '20px 24px', borderRadius: 10, background: COLORS.paper, border: `1px solid ${COLORS.warm}`, borderLeft: `4px solid ${COLORS.teal}` }}>
                   <p style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 16, fontWeight: 700, color: COLORS.teal, margin: '0 0 8px' }}>{pt.title}</p>
@@ -827,7 +908,7 @@ export default function ReportPage() {
         <div id="plan" style={{ marginBottom: 48 }}>
           <h2 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 24, fontWeight: 700, color: COLORS.ink, marginBottom: 8 }}>Your next 30 days</h2>
           <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 15, color: COLORS.muted, lineHeight: 1.7, maxWidth: 560, marginBottom: 24 }}>{isLow ? 'A plan for working out what\'s actually driving your difficulties.' : 'A concrete plan for turning this report into a referral.'}</p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div className="stack-list" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {thirtyDayPlan.map((step) => (
               <div key={step.title} className="card-block" style={{ display: 'flex', gap: 16, padding: '18px 22px', background: COLORS.paper, border: `1px solid ${COLORS.warm}`, borderRadius: 10 }}>
                 <span style={{ flexShrink: 0, fontFamily: "'Playfair Display', Georgia, serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: COLORS.accent, paddingTop: 4, width: 78 }}>{step.when}</span>
@@ -844,7 +925,7 @@ export default function ReportPage() {
         <div id="breakdown" style={{ marginBottom: 48 }}>
           <h2 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 24, fontWeight: 700, color: COLORS.ink, marginBottom: 8 }}>Your symptom breakdown</h2>
           <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 15, color: COLORS.muted, lineHeight: 1.7, maxWidth: 560, marginBottom: 24 }}>Your responses across seven clusters, with detailed interpretation for your score range.</p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div className="stack-list" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {clusters.map((c) => {
               const barColor = c.pct >= 65 ? COLORS.accent : c.pct >= 40 ? COLORS.amber : COLORS.teal;
               const bgColor = c.pct >= 65 ? COLORS.accentPale : c.pct >= 40 ? COLORS.amberPale : COLORS.tealPale;
@@ -948,7 +1029,7 @@ export default function ReportPage() {
             <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 15, color: COLORS.muted, lineHeight: 1.7, maxWidth: 560, marginBottom: 20 }}>
               {likelihood === 'High' || likelihood === 'Moderate' ? 'Your ADHD scores are notable — but you also flagged in areas that overlap with or commonly co-occur alongside ADHD.' : 'Your ADHD scores were lower, but you flagged in some areas that can produce ADHD-like symptoms on their own.'}
             </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div className="stack-list" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {differentialFlags.map((flag) => (
                 <div key={flag.key} className="card-block" style={{ background: COLORS.paper, border: `1px solid ${COLORS.warm}`, borderLeft: `3px solid ${COLORS.amber}`, borderRadius: 10, padding: '18px 22px' }}>
                   <p style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 16, fontWeight: 700, color: COLORS.ink, margin: '0 0 4px' }}>{flag.label} {flag.score === 4 ? '(strong signal)' : '(flagged)'}</p>
@@ -1000,9 +1081,9 @@ export default function ReportPage() {
           <div style={{ flex: 1 }}>
             <h4 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 20, fontWeight: 700, color: COLORS.ink, marginBottom: 8 }}>What to say to your {R.doctor}</h4>
             <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 14, color: COLORS.muted, lineHeight: 1.6, marginBottom: 20 }}>{isLow ? 'Even without a strong ADHD signal, this conversation is worth having. Here are some phrases that may help.' : 'Asking for an ADHD assessment can feel daunting. Here are some phrases that may help.'}</p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 20 }}>
+            <div className="stack-list" style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 20 }}>
               {gpScripts.map((s) => (
-                <div key={s.label} style={{ background: COLORS.pageBg, border: `1px solid ${COLORS.warm}`, borderRadius: 8, padding: '16px 18px' }}>
+                <div key={s.label} className="card-block" style={{ background: COLORS.pageBg, border: `1px solid ${COLORS.warm}`, borderRadius: 8, padding: '16px 18px' }}>
                   <span style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 12, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.accent, marginBottom: 8, display: 'block' }}>{s.label}</span>
                   <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 14, fontStyle: 'italic', color: COLORS.inkLight, lineHeight: 1.6, margin: 0 }}>{s.text}</p>
                 </div>
@@ -1036,13 +1117,13 @@ export default function ReportPage() {
             <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 15, lineHeight: 1.8, color: '#D4C8B8', marginBottom: 16, position: 'relative', zIndex: 1 }}>
               NHS waiting lists for adult ADHD assessment can run to several years in many areas. But if you're registered with a GP in <strong style={{ color: '#F9F5EE' }}>England</strong>, you have a legal right — under NHS choice rules — to choose which provider your GP refers you to for your first appointment, as long as that provider holds an NHS contract for the service. Several do, with waits typically measured in months rather than years, and <strong style={{ color: '#F9F5EE' }}>it's still fully NHS-funded — it costs you nothing</strong>.
             </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 18, position: 'relative', zIndex: 1 }}>
+            <div className="stack-list" style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 18, position: 'relative', zIndex: 1 }}>
               {[
                 { step: '1', text: 'Choose a Right to Choose provider — commonly used ones include Psychiatry-UK, ADHD 360, Clinical Partners, and Dr J & Colleagues. Check their websites first: waiting times and whether they\'re accepting new Right to Choose referrals change.' },
                 { step: '2', text: 'Ask your GP for the referral by name, using the script in the section above. This is a legal right when the criteria are met — you\'re not asking for a favour.' },
                 { step: '3', text: 'Some providers have a referral form your GP needs to complete — bringing a printout of the provider\'s GP referral page to your appointment makes it easy to say yes.' },
               ].map((s) => (
-                <div key={s.step} style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
+                <div key={s.step} className="card-block" style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
                   <span style={{ flexShrink: 0, width: 26, height: 26, borderRadius: '50%', background: COLORS.accent, color: '#fff', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Playfair Display', Georgia, serif", fontSize: 13, fontWeight: 700 }}>{s.step}</span>
                   <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 14, lineHeight: 1.7, color: '#D4C8B8', margin: 0 }}>{s.text}</p>
                 </div>
@@ -1072,7 +1153,7 @@ export default function ReportPage() {
           </div>
 
           <h3 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 18, fontWeight: 700, color: COLORS.ink, marginBottom: 14 }}>{region === 'us' ? 'Reasonable accommodations to consider' : 'Reasonable adjustments to consider'}</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
+          <div className="stack-list" style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
             {[
               { title: 'Flexible start and finish times', desc: 'If time management in the morning is a significant difficulty, adjusted hours can make a meaningful difference.' },
               { title: 'Quiet working space or noise-cancelling headphones', desc: 'To reduce sensory overload and distraction in open-plan environments.' },
