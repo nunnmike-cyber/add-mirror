@@ -129,7 +129,7 @@ function readScreener(storageKey, questions, bands) {
 }
 
 // ── Archetype logic ───────────────────────────────────────────────────────────
-function getArchetype(clusterPct, likelihood) {
+function getArchetype(clusterPct, likelihood, isWomanOrNB) {
   const { inattentive = 0, hyperactive = 0, impulsive = 0, masking = 0, emotional = 0, executive = 0, hyperfocus = 0 } = clusterPct;
   const highMasking = masking >= 60;
   const highEmotional = emotional >= 60;
@@ -147,7 +147,9 @@ function getArchetype(clusterPct, likelihood) {
 
   if (highMasking) return {
     name: 'The High-Functioning Masker',
-    body: "You've spent years getting things done — just at a cost most people around you can't see. On the outside, you appear capable, organised, even high-achieving. On the inside, it takes two or three times the effort of everyone else, and the gap between how you look and how you feel is exhausting. You're the person who holds it together until you can't, and then wonders why you're so burned out when you seemed fine.",
+    body: isWomanOrNB
+      ? "You've spent years getting things done — just at a cost most people around you can't see. On the outside, you appear capable, organised, even high-achieving. On the inside, it takes two or three times the effort of everyone else, and the gap between how you look and how you feel is exhausting. This pattern — high external competence masking real internal struggle — is exactly why women and non-binary people are so often missed or diagnosed a decade or more later than men. You're the person who holds it together until you can't, and then wonders why you're so burned out when you seemed fine."
+      : "You've spent years getting things done — just at a cost most people around you can't see. On the outside, you appear capable, organised, even high-achieving. On the inside, it takes two or three times the effort of everyone else, and the gap between how you look and how you feel is exhausting. You're the person who holds it together until you can't, and then wonders why you're so burned out when you seemed fine.",
   };
   if (highHyperfocus && highEmotional) return {
     name: 'The Creative Overthinker',
@@ -167,7 +169,9 @@ function getArchetype(clusterPct, likelihood) {
   };
   if (highInattentive && !highHyperactive) return {
     name: 'The Inattentive Understater',
-    body: "Your ADHD doesn't shout. It whispers — in the unfinished projects, the lost threads, the conversations you checked out of halfway through. You're probably not the person anyone would point to and say 'they have ADHD,' which is partly why it's taken this long to look into it. The inattentive presentation is consistently the most underdiagnosed, partly because the people who have it are often quietly struggling in ways that don't disturb anyone else.",
+    body: isWomanOrNB
+      ? "Your ADHD doesn't shout. It whispers — in the unfinished projects, the lost threads, the conversations you checked out of halfway through. You're probably not the person anyone would point to and say 'they have ADHD' — the hyperactive, disruptive stereotype most people carry around simply doesn't match how this presents in you. The inattentive presentation is consistently the most underdiagnosed, and it's especially underdiagnosed in women and non-binary people, who are more likely to have this quieter profile and more likely to have learned to mask it well."
+      : "Your ADHD doesn't shout. It whispers — in the unfinished projects, the lost threads, the conversations you checked out of halfway through. You're probably not the person anyone would point to and say 'they have ADHD,' which is partly why it's taken this long to look into it. The inattentive presentation is consistently the most underdiagnosed, partly because the people who have it are often quietly struggling in ways that don't disturb anyone else.",
   };
   return {
     name: 'The Late-Identified Adult',
@@ -191,6 +195,41 @@ function getThreeWords(clusterPct) {
   const qualifying = clusters.filter((c) => c.val >= 35);
   if (qualifying.length < 3) return null;
   return [...qualifying].sort((a, b) => b.val - a.val).slice(0, 3).map((c) => c.word);
+}
+
+// ── Gender-specific content ────────────────────────────────────────────────────
+// Women and non-binary people are diagnosed with ADHD significantly later than
+// men on average, are more often missed or misdiagnosed (commonly as anxiety,
+// depression, or borderline personality disorder), and experience symptom
+// severity that fluctuates with hormonal cycles — a well-evidenced pattern
+// that's rarely covered even in good general ADHD content. This is real,
+// differentiated paid-tier material, not a restatement of the free page.
+function getGenderSection(likelihood, clusterPct) {
+  const highMasking = (clusterPct.masking || 0) >= 60;
+  const isLow = likelihood === 'Low';
+  return {
+    intro: isLow
+      ? "Your ADHD scores were on the lower side — but the pattern of being missed, mislabelled, or masking effectively is so common in women and non-binary people that it's worth understanding regardless of where you landed today."
+      : "Everything in this report sits inside a wider pattern: women and non-binary people are diagnosed with ADHD years later than men on average, and far more often missed altogether. Here's what's driving that, and what's worth knowing.",
+    points: [
+      {
+        title: 'Diagnosed later, and less often',
+        body: 'The stereotype most clinicians (and most people) carry is a hyperactive young boy. Inattentive ADHD — quieter, less disruptive, easier to overlook — is both more common in women and consistently the most underdiagnosed presentation. The result is an average diagnosis gap of years, sometimes decades, compared to men with a similar underlying profile.',
+      },
+      ...(highMasking ? [{
+        title: 'Masking hides the evidence',
+        body: "Your masking score is elevated, which matters here specifically: girls and women are socialised earlier and more consistently to compensate — to double-check, over-prepare, and appear on top of things regardless of the effort behind the scenes. That effort is invisible to a GP in a ten-minute appointment, which is exactly why it gets missed.",
+      }] : []),
+      {
+        title: 'Frequently misdiagnosed as something else',
+        body: 'Anxiety and depression are the two most common alternate diagnoses given to women who are actually experiencing undiagnosed ADHD — partly because chronic overwhelm produces anxious and low-mood symptoms as a side effect, and partly because those are the labels clinicians reach for first. Some women are also misdiagnosed with borderline personality disorder, particularly when emotional intensity and rejection sensitivity are prominent. If you\u2019ve been treated for one of these before without much improvement, it\u2019s worth raising ADHD explicitly rather than assuming the earlier diagnosis was the full picture.',
+      },
+      {
+        title: 'Hormones change how ADHD feels — day to day and decade to decade',
+        body: "This is well-evidenced but rarely talked about: oestrogen affects dopamine regulation, so ADHD symptoms reliably intensify in the days before a period (alongside PMDD, which itself overlaps heavily with ADHD), and worsen significantly during perimenopause as oestrogen declines. It's genuinely common for women to be identified with ADHD for the first time in their 40s, when perimenopause strips away coping mechanisms that quietly worked for years. If your symptoms feel like they've gotten worse recently, hormonal change is a real and common explanation worth mentioning to a professional \u2014 not a sign you're imagining it.",
+      },
+    ],
+  };
 }
 
 // ── Strengths data ────────────────────────────────────────────────────────────
@@ -274,7 +313,7 @@ function generateGPExport(clusterPct, scoring, context, typeLabel, impairment, d
 </table>
 ${maskingApplied ? `<div class="note"><strong>Masking note:</strong> This patient scored ${clusterPct.masking || 0}% on compensation/masking items. The adjusted score includes a ${maskingBoost}-point upward modifier.</div>` : ''}
 ${childhoodCaveat ? `<div class="note"><strong>Childhood note:</strong> Childhood symptom scores were notably lower than adult scores. This warrants further clinical exploration.</div>` : ''}
-${context.gender === 'Woman' && (clusterPct.inattentive || 0) > (clusterPct.hyperactive || 0) + 15 ? `<div class="note"><strong>Gender note:</strong> This patient presents with a predominantly inattentive profile. Research consistently shows inattentive ADHD is underdiagnosed in women.</div>` : ''}
+${(context.gender === 'Woman' || context.gender === 'Non-binary / other') ? `<div class="note"><strong>Gender note:</strong> This patient is female / non-binary. This group is diagnosed with ADHD significantly later on average and is more frequently missed, particularly with an inattentive-dominant profile${(clusterPct.inattentive || 0) > (clusterPct.hyperactive || 0) + 15 ? ' — as seen here' : ''}. Common contributing factors include high masking${maskingApplied ? ' (elevated in this patient)' : ''}, prior misdiagnosis as anxiety, depression, or BPD, and symptom fluctuation linked to the menstrual cycle and perimenopause.</div>` : ''}
 <h2>Anxiety &amp; Mood Screening</h2>
 <table>
   <tr><th>Instrument</th><th>Score</th><th>Interpretation</th></tr>
@@ -573,7 +612,9 @@ export default function ReportPage() {
 
   const { context, clusterPct, scoring, impairment, differentialFlags } = reportData;
   const { likelihood, adjustedScore, coreSignal, partA, maskingApplied, maskingBoost } = scoring;
-  const archetype = getArchetype(clusterPct, likelihood);
+  const isWomanOrNB = context.gender === 'Woman' || context.gender === 'Non-binary / other';
+  const archetype = getArchetype(clusterPct, likelihood, isWomanOrNB);
+  const genderSection = isWomanOrNB ? getGenderSection(likelihood, clusterPct) : null;
   const threeWords = getThreeWords(clusterPct);
   const R = REGIONS[region] || REGIONS.intl;
   const gpScripts = getGPScripts(likelihood, differentialFlags, region);
@@ -689,6 +730,7 @@ export default function ReportPage() {
             {[
               ['#archetype', 'Your archetype'],
               ['#strengths', 'Your strengths'],
+              ...(genderSection ? [['#gender', 'Understanding this pattern']] : []),
               ['#plan', 'Your next 30 days'],
               ['#breakdown', 'Symptom breakdown'],
               ['#impairment', 'Functional impact'],
@@ -761,6 +803,25 @@ export default function ReportPage() {
             })}
           </div>
         </div>
+
+        {/* Understanding this pattern — women & non-binary specific content */}
+        {genderSection && (
+          <div id="gender" style={{ marginBottom: 48 }}>
+            <h2 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 24, fontWeight: 700, color: COLORS.ink, marginBottom: 8 }}>Understanding this pattern</h2>
+            <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 15, color: COLORS.muted, lineHeight: 1.7, maxWidth: 560, marginBottom: 24 }}>{genderSection.intro}</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              {genderSection.points.map((pt) => (
+                <div key={pt.title} className="card-block" style={{ padding: '20px 24px', borderRadius: 10, background: COLORS.paper, border: `1px solid ${COLORS.warm}`, borderLeft: `4px solid ${COLORS.teal}` }}>
+                  <p style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 16, fontWeight: 700, color: COLORS.teal, margin: '0 0 8px' }}>{pt.title}</p>
+                  <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 14, lineHeight: 1.75, color: COLORS.inkLight, margin: 0 }}>{pt.body}</p>
+                </div>
+              ))}
+            </div>
+            <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 12, color: COLORS.mutedLight, lineHeight: 1.6, marginTop: 16 }}>
+              None of this is a substitute for a professional opinion — but it's exactly the kind of context that's easy for a rushed appointment to miss, and worth raising yourself if it isn't.
+            </p>
+          </div>
+        )}
 
         {/* 30-day plan */}
         <div id="plan" style={{ marginBottom: 48 }}>
