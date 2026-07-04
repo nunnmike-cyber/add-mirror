@@ -11,6 +11,56 @@ const COLORS = {
   amber: '#C47A00', amberPale: '#FFF3CC', pageBg: '#FAF7F2',
 };
 
+// ── Regions ───────────────────────────────────────────────────────────────────
+// Crisis lines, doctor terminology, and workplace rights are region-specific.
+// We guess from the browser timezone and let the person correct it with the
+// switcher near the top of the report. The choice persists in localStorage.
+const REGIONS = {
+  uk: {
+    label: 'United Kingdom',
+    doctor: 'GP',
+    doctorCap: 'GP',
+    summaryName: 'GP Summary',
+    crisisContacts: [
+      { name: 'Samaritans', detail: '116 123' },
+      { name: 'Shout', detail: 'text 85258' },
+    ],
+    crisisLine: 'the Samaritans on 116 123 (free, 24/7)',
+  },
+  us: {
+    label: 'United States',
+    doctor: 'doctor',
+    doctorCap: 'Doctor',
+    summaryName: 'Clinician Summary',
+    crisisContacts: [
+      { name: '988 Lifeline', detail: 'call or text 988' },
+      { name: 'Crisis Text Line', detail: 'text HOME to 741741' },
+    ],
+    crisisLine: 'the 988 Suicide & Crisis Lifeline (call or text 988, free, 24/7)',
+  },
+  intl: {
+    label: 'Elsewhere',
+    doctor: 'doctor',
+    doctorCap: 'Doctor',
+    summaryName: 'Clinician Summary',
+    crisisContacts: [
+      { name: 'findahelpline.com', detail: 'crisis lines by country' },
+    ],
+    crisisLine: 'a local crisis line — findahelpline.com lists free services by country',
+  },
+};
+
+function detectRegion() {
+  try {
+    const saved = localStorage.getItem('adhd_mirror_region');
+    if (saved && REGIONS[saved]) return saved;
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+    if (tz === 'Europe/London' || tz === 'Europe/Belfast') return 'uk';
+    if (tz.startsWith('America/')) return 'us';
+  } catch (_) {}
+  return 'intl';
+}
+
 // ── Screener definitions (module scope so the GP export can reuse them) ──────
 const SCREENER_OPTIONS = [
   { label: 'Not at all', value: 0 },
@@ -29,12 +79,15 @@ const GAD7_QUESTIONS = [
   'Feeling afraid, as if something awful might happen',
 ];
 
-const GAD7_BANDS = [
-  { label: 'Minimal anxiety', min: 0, max: 4, bg: COLORS.tealPale, border: COLORS.teal, body: "Your anxiety score is in the minimal range. This doesn't mean you never feel anxious — but it's not showing up as a persistent pattern right now." },
-  { label: 'Mild anxiety', min: 5, max: 9, bg: COLORS.amberPale, border: COLORS.amber, body: 'Worth mentioning to your GP, particularly in the context of ADHD — the two often overlap and can amplify each other.' },
-  { label: 'Moderate anxiety', min: 10, max: 14, bg: '#FFF0E8', border: COLORS.accentLight, body: 'This is significant and worth raising explicitly with your GP. Moderate anxiety at this level can affect sleep, concentration, relationships, and physical health.' },
-  { label: 'Severe anxiety', min: 15, max: 21, bg: COLORS.accentPale, border: COLORS.accent, body: 'Please raise this with your GP as a priority. Effective support is available. You can also contact the Samaritans any time on 116 123.' },
-];
+function gad7Bands(regionKey) {
+  const R = REGIONS[regionKey] || REGIONS.intl;
+  return [
+    { label: 'Minimal anxiety', min: 0, max: 4, bg: COLORS.tealPale, border: COLORS.teal, body: "Your anxiety score is in the minimal range. This doesn't mean you never feel anxious — but it's not showing up as a persistent pattern right now." },
+    { label: 'Mild anxiety', min: 5, max: 9, bg: COLORS.amberPale, border: COLORS.amber, body: `Worth mentioning to your ${R.doctor}, particularly in the context of ADHD — the two often overlap and can amplify each other.` },
+    { label: 'Moderate anxiety', min: 10, max: 14, bg: '#FFF0E8', border: COLORS.accentLight, body: `This is significant and worth raising explicitly with your ${R.doctor}. Moderate anxiety at this level can affect sleep, concentration, relationships, and physical health.` },
+    { label: 'Severe anxiety', min: 15, max: 21, bg: COLORS.accentPale, border: COLORS.accent, body: `Please raise this with your ${R.doctor} as a priority. Effective support is available. If you need someone to talk to now, you can contact ${R.crisisLine}.` },
+  ];
+}
 
 const PHQ9_QUESTIONS = [
   'Little interest or pleasure in doing things',
@@ -48,12 +101,15 @@ const PHQ9_QUESTIONS = [
   'Thoughts that you would be better off dead, or thoughts of hurting yourself',
 ];
 
-const PHQ9_BANDS = [
-  { label: 'Minimal symptoms', min: 0, max: 4, bg: COLORS.tealPale, border: COLORS.teal, body: "Your score is in the minimal range. Low mood is a normal part of life — this suggests it's not a persistent or clinically significant pattern right now." },
-  { label: 'Mild symptoms', min: 5, max: 9, bg: COLORS.amberPale, border: COLORS.amber, body: 'Worth mentioning to your GP, especially alongside ADHD — low mood, low motivation, and difficulty experiencing pleasure are common features of both.' },
-  { label: 'Moderate symptoms', min: 10, max: 14, bg: '#FFF0E8', border: COLORS.accentLight, body: 'Please raise this with your GP. This level of low mood can significantly affect daily functioning and quality of life, and effective support is available.' },
-  { label: 'Moderately severe – severe symptoms', min: 15, max: 27, bg: COLORS.accentPale, border: COLORS.accent, body: 'Please speak to your GP as soon as possible, or contact the Samaritans on 116 123 (free, 24/7). You can also text SHOUT to 85258. Effective treatment exists — you deserve proper support.' },
-];
+function phq9Bands(regionKey) {
+  const R = REGIONS[regionKey] || REGIONS.intl;
+  return [
+    { label: 'Minimal symptoms', min: 0, max: 4, bg: COLORS.tealPale, border: COLORS.teal, body: "Your score is in the minimal range. Low mood is a normal part of life — this suggests it's not a persistent or clinically significant pattern right now." },
+    { label: 'Mild symptoms', min: 5, max: 9, bg: COLORS.amberPale, border: COLORS.amber, body: `Worth mentioning to your ${R.doctor}, especially alongside ADHD — low mood, low motivation, and difficulty experiencing pleasure are common features of both.` },
+    { label: 'Moderate symptoms', min: 10, max: 14, bg: '#FFF0E8', border: COLORS.accentLight, body: `Please raise this with your ${R.doctor}. This level of low mood can significantly affect daily functioning and quality of life, and effective support is available.` },
+    { label: 'Moderately severe – severe symptoms', min: 15, max: 27, bg: COLORS.accentPale, border: COLORS.accent, body: `Please speak to your ${R.doctor} as soon as possible, or contact ${R.crisisLine}. Effective treatment exists — you deserve proper support.` },
+  ];
+}
 
 // Reads saved screener answers from localStorage and scores them.
 function readScreener(storageKey, questions, bands) {
@@ -148,12 +204,13 @@ const STRENGTHS = {
   masking: { from: 'Masking & Compensation', to: 'Social Intelligence', body: "The effort you've put into reading rooms, adapting your presentation, and managing how you come across has — whether you intended it or not — built real social sophistication. High maskers tend to be perceptive, adaptive, and skilled at navigating complex social environments." },
 };
 
-// ── GP Export (opens in a new tab, print-ready, includes screener results) ────
-function generateGPExport(clusterPct, scoring, context, typeLabel, impairment, differentialFlags) {
+// ── Clinician export (opens in a new tab, print-ready, includes screeners) ────
+function generateGPExport(clusterPct, scoring, context, typeLabel, impairment, differentialFlags, regionKey) {
+  const R = REGIONS[regionKey] || REGIONS.intl;
   const { coreSignal, adjustedScore, partA, maskingApplied, maskingBoost, childhoodCaveat, likelihood } = scoring;
   const today = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-  const gad7 = readScreener('adhd_mirror_gad7', GAD7_QUESTIONS, GAD7_BANDS);
-  const phq9 = readScreener('adhd_mirror_phq9', PHQ9_QUESTIONS, PHQ9_BANDS);
+  const gad7 = readScreener('adhd_mirror_gad7', GAD7_QUESTIONS, gad7Bands(regionKey));
+  const phq9 = readScreener('adhd_mirror_phq9', PHQ9_QUESTIONS, phq9Bands(regionKey));
   const phq9Item9Flag = phq9.complete && phq9.answers[8] > 0;
   const clusterRows = [
     { label: 'Inattention', pct: clusterPct.inattentive || 0, typical: 20 },
@@ -166,7 +223,7 @@ function generateGPExport(clusterPct, scoring, context, typeLabel, impairment, d
   ];
   const lc = likelihood === 'High' ? '#C4581A' : likelihood === 'Moderate' ? '#C47A00' : '#2A6B6B';
   const lbg = likelihood === 'High' ? '#F5DDD0' : likelihood === 'Moderate' ? '#FFF3CC' : '#D0ECEC';
-  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>ADHD Screening Results — GP Summary</title>
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>ADHD Screening Results — ${R.summaryName}</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Playfair+Display:wght@400;600;700&display=swap');
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -193,7 +250,7 @@ function generateGPExport(clusterPct, scoring, context, typeLabel, impairment, d
   @media print { body { padding: 20px; } .no-print { display: none; } }
 </style></head><body>
 <h1>ADHD Screening Results</h1>
-<p class="subtitle">Self-assessment summary for GP review — ${today}</p>
+<p class="subtitle">Self-assessment summary for clinician review — ${today}</p>
 <div class="verdict">
   <div class="verdict-label">Overall ADHD Likelihood</div>
   <div class="verdict-value">${likelihood}</div>
@@ -256,7 +313,7 @@ ${differentialFlags.map((f) => `<tr><td><strong>${f.label}</strong></td><td clas
     const blob = new Blob([html], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url; a.download = 'ADHD-Screening-GP-Summary.html';
+    a.href = url; a.download = 'ADHD-Screening-Clinician-Summary.html';
     document.body.appendChild(a); a.click();
     document.body.removeChild(a); URL.revokeObjectURL(url);
   }
@@ -265,7 +322,7 @@ ${differentialFlags.map((f) => `<tr><td><strong>${f.label}</strong></td><td clas
 
 // ── Interactive self-scoring screener (GAD-7 / PHQ-9) ─────────────────────────
 // Answers persist to localStorage so they survive refresh and feed the GP export.
-function ScoredQuestionnaire({ questions, bands, crisisIndex, storageKey, printTitle }) {
+function ScoredQuestionnaire({ questions, bands, crisisIndex, storageKey, printTitle, crisisContacts }) {
   const [answers, setAnswers] = useState(() => {
     if (typeof window !== 'undefined') {
       try {
@@ -333,8 +390,9 @@ function ScoredQuestionnaire({ questions, bands, crisisIndex, storageKey, printT
           <h3 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 17, fontWeight: 700, color: COLORS.accent, marginBottom: 8 }}>About your answer to question {crisisIndex + 1}</h3>
           <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 14, lineHeight: 1.7, color: COLORS.inkLight, marginBottom: 12 }}>We want to acknowledge that gently and without alarm — these thoughts are more common than people realise, and they're a sign that you need and deserve proper support. Please don't face this alone.</p>
           <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-            <span style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 16, fontWeight: 700, color: COLORS.accent }}>Samaritans: 116 123</span>
-            <span style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 16, fontWeight: 700, color: COLORS.accent }}>Shout: text 85258</span>
+            {(crisisContacts || REGIONS.intl.crisisContacts).map((c) => (
+              <span key={c.name} style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 16, fontWeight: 700, color: COLORS.accent }}>{c.name}: {c.detail}</span>
+            ))}
           </div>
         </div>
       )}
@@ -359,8 +417,8 @@ function ScoredQuestionnaire({ questions, bands, crisisIndex, storageKey, printT
   );
 }
 
-// ── GP scripts — likelihood-aware ─────────────────────────────────────────────
-function getGPScripts(likelihood, differentialFlags) {
+// ── Doctor scripts — likelihood- and region-aware ─────────────────────────────
+function getGPScripts(likelihood, differentialFlags, regionKey) {
   if (likelihood === 'Low') {
     const flagText = differentialFlags.length > 0
       ? differentialFlags.map((f) => f.label.toLowerCase()).join(', ')
@@ -371,6 +429,23 @@ function getGPScripts(likelihood, differentialFlags) {
       { label: 'If you still suspect ADHD', text: '"I know my screening result was lower, but these difficulties have been lifelong and they\'re affecting my work and relationships. I\'d like to keep ADHD on the table while we rule other things out."' },
     ];
   }
+  if (regionKey === 'us') {
+    return [
+      { label: 'Opening the conversation', text: '"I\'ve been struggling with focus, organization, and follow-through since childhood, and I\'d like to be evaluated for ADHD. Can we discuss an evaluation, or a referral to someone who assesses adults for ADHD?"' },
+      { label: 'If they push back', text: '"I understand it might not be ADHD, but I\'d like to rule it out properly. These difficulties are affecting my work and relationships and I\'d like to take it seriously."' },
+      { label: "If it's been put down to anxiety or depression before", text: '"I\'ve been treated for anxiety/low mood before, but the underlying difficulties with focus and organization have been there since childhood — long before the anxiety. I\'d like to explore whether ADHD is the underlying factor."' },
+      { label: 'Practical questions to ask', text: '"Does my insurance require a referral for a psychiatric evaluation? And can you recommend providers who evaluate adults for ADHD — psychiatrists or psychologists — who are in-network?"' },
+    ];
+  }
+  if (regionKey === 'intl') {
+    return [
+      { label: 'Opening the conversation', text: '"I\'ve been struggling with focus, organisation, and emotional regulation for most of my life and I\'d like to explore whether ADHD might be a factor. I\'d like to discuss being assessed."' },
+      { label: 'If they push back', text: '"I understand it might not be ADHD, but I\'d like to rule it out properly. These difficulties are affecting my work and relationships and I\'d like to take it seriously."' },
+      { label: "If it's been put down to anxiety or depression before", text: '"I\'ve been treated for anxiety/low mood before, but the underlying difficulties with focus and organisation have been there since childhood — long before the anxiety. I\'d like to explore whether ADHD is the underlying factor."' },
+      { label: 'Understanding how it works where you live', text: '"How does adult ADHD assessment work here — is it through you, a psychiatrist, or a specialist clinic? What are the typical waiting times, and is there anything I can do to speed it up?"' },
+    ];
+  }
+  // UK (default)
   return [
     { label: 'Opening the conversation', text: '"I\'ve been struggling with focus, organisation, and emotional regulation for most of my life and I\'d like to explore whether ADHD might be a factor. I\'d like to discuss a referral for an assessment."' },
     { label: 'If they push back', text: '"I understand it might not be ADHD, but I\'d like to rule it out properly. These difficulties are affecting my work and relationships and I\'d like to take it seriously."' },
@@ -385,6 +460,16 @@ export default function ReportPage() {
   const searchParams = useSearchParams();
   const [ready, setReady] = useState(false);
   const [reportData, setReportData] = useState(null);
+  const [region, setRegion] = useState('uk');
+
+  const changeRegion = (r) => {
+    setRegion(r);
+    try { localStorage.setItem('adhd_mirror_region', r); } catch (_) {}
+  };
+
+  useEffect(() => {
+    setRegion(detectRegion());
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -490,8 +575,10 @@ export default function ReportPage() {
   const { likelihood, adjustedScore, coreSignal, partA, maskingApplied, maskingBoost } = scoring;
   const archetype = getArchetype(clusterPct, likelihood);
   const threeWords = getThreeWords(clusterPct);
-  const gpScripts = getGPScripts(likelihood, differentialFlags);
+  const R = REGIONS[region] || REGIONS.intl;
+  const gpScripts = getGPScripts(likelihood, differentialFlags, region);
   const isLow = likelihood === 'Low';
+  const isUK = region === 'uk';
   const inattentivePct = clusterPct.inattentive || 0;
   const hyperactivePct = clusterPct.hyperactive || 0;
   const isInattentiveDominant = inattentivePct > hyperactivePct + 15;
@@ -525,14 +612,18 @@ export default function ReportPage() {
     ? [
         { when: 'This week', title: 'Complete the anxiety & mood screeners below', body: 'Your GAD-7 and PHQ-9 scores are likely to be the most useful evidence you take to a professional — they capture what may actually be driving your difficulties.' },
         { when: 'Week 1–2', title: 'Keep a short daily log', body: 'Two lines a day: energy, sleep, and one moment where focus failed you. Patterns over two weeks are worth more than any single conversation.' },
-        { when: 'Week 2–3', title: 'Book a GP appointment', body: 'Bring your GP summary and your log. Frame it as "help me work out what\'s driving this" — the scripts below give you exact wording.' },
+        { when: 'Week 2–3', title: `Book an appointment with your ${R.doctor}`, body: `Bring your ${R.summaryName.toLowerCase()} and your log. Frame it as "help me work out what's driving this" — the scripts below give you exact wording.` },
         { when: 'Week 4', title: 'Review what changed', body: 'If sleep, anxiety, or mood improved with support and your focus improved with them — that\'s your answer. If not, ADHD stays reasonably on the table.' },
       ]
     : [
-        { when: 'This week', title: 'Complete the anxiety & mood screeners below', body: 'GPs take screening evidence more seriously when it covers the full picture. Five minutes now makes your GP summary substantially stronger.' },
-        { when: 'This week', title: 'Download and read your GP summary', body: 'Know what\'s in it before your appointment, and note down 3–5 specific real-life examples of how these difficulties affect you.' },
-        { when: 'Week 1–2', title: 'Book a GP appointment — ask for a double slot if possible', body: 'ADHD conversations rarely fit in ten minutes. When booking, say it\'s to discuss a referral for an adult ADHD assessment.' },
-        { when: 'Week 2–4', title: 'At the appointment, ask about waiting times — then decide your route', body: 'If the local NHS wait is measured in years, raise Right to Choose (explained below). Leave the appointment with a referral in motion, not a vague "we\'ll see".' },
+        { when: 'This week', title: 'Complete the anxiety & mood screeners below', body: `Clinicians take screening evidence more seriously when it covers the full picture. Five minutes now makes your ${R.summaryName.toLowerCase()} substantially stronger.` },
+        { when: 'This week', title: `Download and read your ${R.summaryName.toLowerCase()}`, body: 'Know what\'s in it before your appointment, and note down 3–5 specific real-life examples of how these difficulties affect you.' },
+        region === 'us'
+          ? { when: 'Week 1–2', title: 'Book an appointment — and check your coverage', body: 'See your doctor, or go directly to a psychiatrist or psychologist if your insurance allows self-referral. Before booking, check which providers are in-network for adult ADHD evaluation — it can save you hundreds of dollars.' }
+          : { when: 'Week 1–2', title: `Book an appointment with your ${R.doctor}${isUK ? ' — ask for a double slot if possible' : ''}`, body: 'ADHD conversations rarely fit in ten minutes. When booking, say it\'s to discuss an adult ADHD assessment.' },
+        isUK
+          ? { when: 'Week 2–4', title: 'At the appointment, ask about waiting times — then decide your route', body: 'If the local NHS wait is measured in years, raise Right to Choose (explained below). Leave the appointment with a referral in motion, not a vague "we\'ll see".' }
+          : { when: 'Week 2–4', title: 'Leave the appointment with a concrete next step', body: 'An evaluation booked, a referral in motion, or a named provider to contact — not a vague "we\'ll see". If the first door doesn\'t open, the scripts below help you push back.' },
       ];
 
   return (
@@ -563,6 +654,34 @@ export default function ReportPage() {
           <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 13, color: COLORS.muted, marginTop: 6 }}>Completed {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })} · For your personal use and reflection</p>
         </div>
 
+        {/* Region switcher — doctor scripts, workplace rights, and crisis lines adapt */}
+        <div className="no-print card-block" style={{ background: COLORS.paper, border: `1px solid ${COLORS.warm}`, borderRadius: 10, padding: '16px 24px', marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+          <div>
+            <p style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 14, fontWeight: 700, color: COLORS.ink, margin: '0 0 2px' }}>Where are you based?</p>
+            <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 12.5, color: COLORS.muted, margin: 0 }}>The doctor scripts, workplace rights, and support lines in this report adapt to your region.</p>
+          </div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {Object.entries(REGIONS).map(([key, r]) => {
+              const selected = region === key;
+              return (
+                <button
+                  key={key}
+                  onClick={() => changeRegion(key)}
+                  style={{
+                    fontFamily: "'Lora', Georgia, serif", fontSize: 13, padding: '8px 14px', borderRadius: 20,
+                    border: `1.5px solid ${selected ? COLORS.accent : COLORS.warm}`,
+                    background: selected ? COLORS.accent : COLORS.pageBg,
+                    color: selected ? '#fff' : COLORS.inkLight,
+                    cursor: 'pointer', transition: 'all 0.15s',
+                  }}
+                >
+                  {r.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {/* Table of contents */}
         <div className="no-print card-block" style={{ background: COLORS.paper, border: `1px solid ${COLORS.warm}`, borderRadius: 10, padding: '20px 24px', marginBottom: 36 }}>
           <span style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 11, letterSpacing: '0.15em', textTransform: 'uppercase', color: COLORS.muted, marginBottom: 12, display: 'block' }}>What's inside</span>
@@ -575,8 +694,8 @@ export default function ReportPage() {
               ['#impairment', 'Functional impact'],
               ...(differentialFlags.length > 0 ? [['#differential', 'Other things worth exploring']] : []),
               ['#anxiety-mood', 'Anxiety & mood'],
-              ['#gp', 'GP conversation'],
-              ...(!isLow ? [['#rtc', 'Right to Choose']] : []),
+              ['#gp', isUK ? 'GP conversation' : 'Doctor conversation'],
+              ...(!isLow && isUK ? [['#rtc', 'Right to Choose']] : []),
               ['#workplace', 'Workplace rights'],
             ].map(([href, label]) => (
               <a key={href} href={href} style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 13.5, color: COLORS.inkLight, textDecoration: 'none', padding: '4px 0' }}>
@@ -786,7 +905,7 @@ export default function ReportPage() {
         <div id="anxiety-mood" style={{ marginBottom: 48 }}>
           <h2 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 24, fontWeight: 700, color: COLORS.ink, marginBottom: 8 }}>Anxiety & mood — how you're doing right now</h2>
           <div className="card-block" style={{ background: COLORS.paper, border: `1px solid ${COLORS.warm}`, borderRadius: 10, padding: '20px 24px', marginBottom: 24 }}>
-            <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 14, lineHeight: 1.7, color: COLORS.inkLight }}>ADHD rarely travels alone. Anxiety and depression are among the most common co-occurring experiences. The validated questionnaires below are used widely in NHS primary care — your answers are saved automatically and included in your GP summary download.</p>
+            <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 14, lineHeight: 1.7, color: COLORS.inkLight }}>ADHD rarely travels alone. Anxiety and depression are among the most common co-occurring experiences. The validated questionnaires below are used widely in primary care{isUK ? ' across the NHS' : ''} — your answers are saved automatically and included in your {R.summaryName.toLowerCase()} download.</p>
           </div>
 
           {/* GAD-7 */}
@@ -795,7 +914,8 @@ export default function ReportPage() {
           <div style={{ marginBottom: 32 }}>
             <ScoredQuestionnaire
               questions={GAD7_QUESTIONS}
-              bands={GAD7_BANDS}
+              bands={gad7Bands(region)}
+              crisisContacts={R.crisisContacts}
               storageKey="adhd_mirror_gad7"
               printTitle="GAD-7 anxiety screening"
             />
@@ -806,7 +926,8 @@ export default function ReportPage() {
           <p className="no-print" style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 13, color: COLORS.muted, marginBottom: 16, fontStyle: 'italic' }}>Over the last two weeks, how often have you been bothered by the following? Tap an answer for each question — your score is calculated automatically.</p>
           <ScoredQuestionnaire
             questions={PHQ9_QUESTIONS}
-            bands={PHQ9_BANDS}
+            bands={phq9Bands(region)}
+            crisisContacts={R.crisisContacts}
             crisisIndex={8}
             storageKey="adhd_mirror_phq9"
             printTitle="PHQ-9 depression screening"
@@ -816,7 +937,7 @@ export default function ReportPage() {
         {/* GP Section */}
         <div id="gp" className="card-block" style={{ padding: '28px 32px', background: COLORS.paper, border: `2px solid ${COLORS.warm}`, borderRadius: 12, marginBottom: isLow ? 48 : 24 }}>
           <div style={{ flex: 1 }}>
-            <h4 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 20, fontWeight: 700, color: COLORS.ink, marginBottom: 8 }}>What to say to your GP</h4>
+            <h4 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 20, fontWeight: 700, color: COLORS.ink, marginBottom: 8 }}>What to say to your {R.doctor}</h4>
             <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 14, color: COLORS.muted, lineHeight: 1.6, marginBottom: 20 }}>{isLow ? 'Even without a strong ADHD signal, this conversation is worth having. Here are some phrases that may help.' : 'Asking for an ADHD assessment can feel daunting. Here are some phrases that may help.'}</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 20 }}>
               {gpScripts.map((s) => (
@@ -835,18 +956,18 @@ export default function ReportPage() {
                 </li>
               ))}
             </ul>
-            <button onClick={() => generateGPExport(clusterPct, scoring, context, typeLabel, impairment, differentialFlags)}
+            <button onClick={() => generateGPExport(clusterPct, scoring, context, typeLabel, impairment, differentialFlags, region)}
               className="no-print"
               style={{ marginTop: 20, background: COLORS.teal, color: '#fff', border: 'none', borderRadius: 4, padding: '14px 28px', fontFamily: "'Playfair Display', Georgia, serif", fontSize: 16, fontWeight: 600, cursor: 'pointer', transition: 'background 0.2s' }}
               onMouseOver={(e) => e.currentTarget.style.background = COLORS.tealLight}
               onMouseOut={(e) => e.currentTarget.style.background = COLORS.teal}>
-              Open GP Summary (print or save as PDF)
+              Open {R.summaryName} (print or save as PDF)
             </button>
           </div>
         </div>
 
         {/* Right to Choose — the single most valuable thing most buyers won't know about */}
-        {!isLow && (
+        {!isLow && isUK && (
           <div id="rtc" className="card-block" style={{ background: COLORS.ink, borderRadius: 12, padding: '32px 36px', marginBottom: 48, position: 'relative', overflow: 'hidden' }}>
             <div style={{ position: 'absolute', bottom: 0, left: 0, width: 180, height: 180, borderRadius: '50%', background: COLORS.teal, opacity: 0.12, transform: 'translate(-60px,60px)' }} />
             <span style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase', color: COLORS.accentLight, marginBottom: 12, display: 'block' }}>The Part Almost Nobody Knows</span>
@@ -875,13 +996,21 @@ export default function ReportPage() {
         {/* Workplace */}
         <div id="workplace" style={{ marginBottom: 48 }}>
           <h2 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 24, fontWeight: 700, color: COLORS.ink, marginBottom: 8 }}>Understanding your rights at work</h2>
-          <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 15, color: COLORS.muted, lineHeight: 1.7, maxWidth: 560, marginBottom: 20 }}>{isLow ? 'Whatever turns out to be behind your difficulties, conditions that have a substantial, long-term effect on daily activities are protected under the Equality Act 2010 — and employers have a duty to make reasonable adjustments.' : 'ADHD is a protected characteristic under the Equality Act 2010. Your employer has a legal duty to make reasonable adjustments — whether or not you have a formal diagnosis.'}</p>
+          <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 15, color: COLORS.muted, lineHeight: 1.7, maxWidth: 560, marginBottom: 20 }}>
+            {isUK && (isLow ? 'Whatever turns out to be behind your difficulties, conditions that have a substantial, long-term effect on daily activities are protected under the Equality Act 2010 — and employers have a duty to make reasonable adjustments.' : 'ADHD is a protected characteristic under the Equality Act 2010. Your employer has a legal duty to make reasonable adjustments — whether or not you have a formal diagnosis.')}
+            {region === 'us' && 'In the US, ADHD can qualify as a disability under the Americans with Disabilities Act (ADA) when it substantially limits major life activities. Employers with 15 or more employees must provide reasonable accommodations unless doing so would cause undue hardship.'}
+            {region === 'intl' && 'Employment protections vary by country, but many jurisdictions require employers to make reasonable adjustments for conditions that substantially affect daily life. The adjustments below are worth requesting anywhere — framed around your output and effectiveness rather than a diagnosis.'}
+          </p>
 
           <div className="card-block" style={{ background: COLORS.tealPale, border: `1px solid ${COLORS.tealLight}`, borderRadius: 10, padding: '20px 24px', marginBottom: 20 }}>
-            <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 14, color: COLORS.inkLight, lineHeight: 1.7 }}><strong style={{ color: COLORS.teal }}>You don't need a diagnosis to ask for adjustments.</strong> You can approach your employer, HR, or line manager and describe the difficulties you're experiencing. This report can support that conversation.</p>
+            <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 14, color: COLORS.inkLight, lineHeight: 1.7 }}>
+              {region === 'us'
+                ? <><strong style={{ color: COLORS.teal }}>Formal ADA accommodations usually require disclosure and documentation</strong> — the process typically runs through HR and a diagnosis strengthens it considerably. But many managers will agree to informal adjustments without any of that, so the script below is a good first step either way.</>
+                : <><strong style={{ color: COLORS.teal }}>You don't need a diagnosis to ask for adjustments.</strong> You can approach your employer, HR, or line manager and describe the difficulties you're experiencing. This report can support that conversation.</>}
+            </p>
           </div>
 
-          <h3 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 18, fontWeight: 700, color: COLORS.ink, marginBottom: 14 }}>Reasonable adjustments to consider</h3>
+          <h3 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 18, fontWeight: 700, color: COLORS.ink, marginBottom: 14 }}>{region === 'us' ? 'Reasonable accommodations to consider' : 'Reasonable adjustments to consider'}</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
             {[
               { title: 'Flexible start and finish times', desc: 'If time management in the morning is a significant difficulty, adjusted hours can make a meaningful difference.' },
@@ -905,11 +1034,20 @@ export default function ReportPage() {
             <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 14, fontStyle: 'italic', color: COLORS.inkLight, lineHeight: 1.6, margin: 0 }}>"I've been looking into some difficulties I have with focus and organisation, and I've identified a few small adjustments that would make a real difference to my output — could we find 20 minutes to go through them? I've written them down so it's easy to discuss."</p>
           </div>
 
-          <div className="card-block" style={{ background: COLORS.amberPale, border: '1px solid #E8C97A', borderRadius: 10, padding: '20px 24px', marginBottom: 20 }}>
-            <h3 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 17, fontWeight: 700, color: COLORS.amber, marginBottom: 10 }}>Access to Work</h3>
-            <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 14, lineHeight: 1.7, color: COLORS.inkLight, marginBottom: 10 }}>A government grant scheme that can fund ADHD coaching, assistive technology, and support worker hours. You don't need a formal diagnosis to apply — you need to demonstrate that your condition affects your ability to work.</p>
-            <a href="https://www.gov.uk/access-to-work" target="_blank" rel="noopener noreferrer" style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 15, fontWeight: 700, color: COLORS.teal }}>gov.uk/access-to-work →</a>
-          </div>
+          {isUK && (
+            <div className="card-block" style={{ background: COLORS.amberPale, border: '1px solid #E8C97A', borderRadius: 10, padding: '20px 24px', marginBottom: 20 }}>
+              <h3 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 17, fontWeight: 700, color: COLORS.amber, marginBottom: 10 }}>Access to Work</h3>
+              <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 14, lineHeight: 1.7, color: COLORS.inkLight, marginBottom: 10 }}>A government grant scheme that can fund ADHD coaching, assistive technology, and support worker hours. You don't need a formal diagnosis to apply — you need to demonstrate that your condition affects your ability to work.</p>
+              <a href="https://www.gov.uk/access-to-work" target="_blank" rel="noopener noreferrer" style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 15, fontWeight: 700, color: COLORS.teal }}>gov.uk/access-to-work →</a>
+            </div>
+          )}
+          {region === 'us' && (
+            <div className="card-block" style={{ background: COLORS.amberPale, border: '1px solid #E8C97A', borderRadius: 10, padding: '20px 24px', marginBottom: 20 }}>
+              <h3 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 17, fontWeight: 700, color: COLORS.amber, marginBottom: 10 }}>Job Accommodation Network (JAN)</h3>
+              <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 14, lineHeight: 1.7, color: COLORS.inkLight, marginBottom: 10 }}>A free US government-funded service offering expert, confidential guidance on workplace accommodations — including detailed ADHD-specific accommodation ideas and how to make a request under the ADA.</p>
+              <a href="https://askjan.org" target="_blank" rel="noopener noreferrer" style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 15, fontWeight: 700, color: COLORS.teal }}>askjan.org →</a>
+            </div>
+          )}
         </div>
 
         {/* Closing note */}
@@ -927,7 +1065,7 @@ export default function ReportPage() {
         <div className="card-block" style={{ background: COLORS.paper, border: `1px solid ${COLORS.warm}`, borderRadius: 10, padding: '24px 28px' }}>
           <h3 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 16, fontWeight: 700, color: COLORS.ink, marginBottom: 10 }}>Important</h3>
           <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 13, color: COLORS.muted, lineHeight: 1.7, marginBottom: 8 }}>This report is a self-reflection tool, not a clinical assessment. It cannot diagnose ADHD or any other condition. The scores are based on your self-reported responses and are intended to help you understand your own patterns and prepare for a professional conversation — not to replace one.</p>
-          <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 13, color: COLORS.muted, lineHeight: 1.7 }}>If you're experiencing significant distress, please speak to your GP or contact the Samaritans on <strong>116 123</strong> (free, 24/7).</p>
+          <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 13, color: COLORS.muted, lineHeight: 1.7 }}>If you're experiencing significant distress, please speak to your {R.doctor} or contact {R.crisisLine}.</p>
           <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 12, color: COLORS.mutedLight, marginTop: 12 }}>
             Generated by ADHD Mirror · {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })} · <a href="https://adhdmirror.com/privacy" style={{ color: COLORS.accent }}>Privacy Policy</a>
           </p>
