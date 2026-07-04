@@ -401,6 +401,18 @@ ${differentialFlags.map((f) => `<tr><td><strong>${f.label}</strong></td><td clas
 </div>
 <div class="no-print" style="margin-top:24px;text-align:center">
   <button onclick="window.print()" style="background:#2A6B6B;color:#fff;border:none;border-radius:4px;padding:12px 32px;font-family:'Playfair Display',Georgia,serif;font-size:16px;font-weight:600;cursor:pointer">Print / Save as PDF</button>
+  <p id="pdf-help" style="margin-top:12px;font-size:13px;color:#8A7A68;font-family:'Lora',Georgia,serif">Use your browser's "Save as PDF" option when the print dialog opens.</p>
+  <script>
+    (function() {
+      var ua = navigator.userAgent || '';
+      var help = document.getElementById('pdf-help');
+      if (/iPhone|iPad|iPod/.test(ua)) {
+        help.innerHTML = 'On iPhone/iPad: tap the button, then <strong>pinch outward</strong> on the preview that appears to open the full PDF — from there, tap the Share icon and choose <strong>Save to Files</strong>.';
+      } else if (/Android/.test(ua)) {
+        help.innerHTML = 'Tap the button, then choose <strong>"Save as PDF"</strong> from the dropdown at the top of the print screen, and tap the download icon.';
+      }
+    })();
+  </script>
 </div>
 </body></html>`;
   // Open in a new tab rather than downloading a .html file — far less confusing,
@@ -563,6 +575,7 @@ export default function ReportPage() {
   const [ready, setReady] = useState(false);
   const [reportData, setReportData] = useState(null);
   const [region, setRegion] = useState('uk');
+  const [platform, setPlatform] = useState('desktop'); // 'ios' | 'android' | 'desktop'
 
   const changeRegion = (r) => {
     setRegion(r);
@@ -571,6 +584,17 @@ export default function ReportPage() {
 
   useEffect(() => {
     setRegion(detectRegion());
+    // The "Download as PDF" button triggers the browser's native print flow,
+    // which works on every platform but looks different on each — on iPhone
+    // there's no visible "Save as PDF" button at all, just a print preview
+    // that has to be pinched open to become a real PDF. Detecting the
+    // platform lets us tell people the exact steps for their device instead
+    // of a generic instruction that only really matches desktop.
+    if (typeof navigator !== 'undefined') {
+      const ua = navigator.userAgent || '';
+      if (/iPhone|iPad|iPod/.test(ua)) setPlatform('ios');
+      else if (/Android/.test(ua)) setPlatform('android');
+    }
   }, []);
 
   useEffect(() => {
@@ -1214,8 +1238,12 @@ export default function ReportPage() {
 
         {/* Download & disclaimer */}
         <div className="no-print card-block" style={{ marginBottom: 32, padding: '24px 28px', background: COLORS.paper, border: `2px solid ${COLORS.warm}`, borderRadius: 12, display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
-          <button onClick={() => window.print()} style={{ background: COLORS.teal, color: '#fff', border: 'none', borderRadius: 4, padding: '14px 28px', fontFamily: "'Playfair Display', Georgia, serif", fontSize: 16, fontWeight: 600, cursor: 'pointer' }}>⬇ Download as PDF</button>
-          <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 13, color: COLORS.muted, margin: 0 }}>Use your browser's "Save as PDF" option when the print dialog opens. Complete the anxiety &amp; mood questions first so your scores are included.</p>
+          <button onClick={() => window.print()} style={{ background: COLORS.teal, color: '#fff', border: 'none', borderRadius: 4, padding: '14px 28px', fontFamily: "'Playfair Display', Georgia, serif", fontSize: 16, fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}>⬇ Download as PDF</button>
+          <p style={{ fontFamily: "'Lora', Georgia, serif", fontSize: 13, color: COLORS.muted, margin: 0 }}>
+            {platform === 'ios' && <>On iPhone/iPad: tap the button, then <strong>pinch outward</strong> on the preview that appears to open the full PDF — from there, tap the Share icon and choose <strong>Save to Files</strong>. Complete the anxiety &amp; mood questions first so your scores are included.</>}
+            {platform === 'android' && <>Tap the button, then choose <strong>"Save as PDF"</strong> from the dropdown at the top of the print screen, and tap the download icon. Complete the anxiety &amp; mood questions first so your scores are included.</>}
+            {platform === 'desktop' && <>Use your browser's "Save as PDF" option when the print dialog opens. Complete the anxiety &amp; mood questions first so your scores are included.</>}
+          </p>
         </div>
 
         <div className="card-block" style={{ background: COLORS.paper, border: `1px solid ${COLORS.warm}`, borderRadius: 10, padding: '24px 28px' }}>
