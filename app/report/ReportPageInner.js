@@ -765,6 +765,14 @@ export default function ReportPage() {
         @keyframes spin { to { transform: rotate(360deg); } }
         .card-block { page-break-inside: avoid; break-inside: avoid-page; }
         .print-only { display: none; }
+        /* On narrow screens, three words rarely fit on one line, and letting
+           them wrap naturally strands a "·" divider at the end of each line
+           (e.g. "Stuck ·" / "Absorbed ·"). Stacking explicitly and dropping
+           the dividers reads as a clean, intentional list instead. */
+        @media (max-width: 640px) {
+          .three-words-row { flex-direction: column; row-gap: 6px !important; }
+          .three-words-row .word-divider { display: none; }
+        }
         @media print {
           .no-print { display: none !important; }
           .print-only { display: block !important; }
@@ -805,11 +813,11 @@ export default function ReportPage() {
           <div className="card-block" style={{ position: 'relative', overflow: 'hidden', textAlign: 'center', background: COLORS.accentPale, border: `2px solid ${COLORS.accent}`, borderRadius: 12, padding: '44px 40px', marginBottom: 36 }}>
             <div style={{ position: 'absolute', top: 0, right: 0, width: 180, height: 180, borderRadius: '50%', background: COLORS.accent, opacity: 0.06, transform: 'translate(50px,-70px)', pointerEvents: 'none' }} />
             <span style={{ position: 'relative', fontFamily: "'Playfair Display', Georgia, serif", fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase', color: COLORS.accent, marginBottom: 22, display: 'block' }}>Your profile in three words</span>
-            <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', rowGap: 8 }}>
+            <div className="three-words-row" style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', rowGap: 8 }}>
               {threeWords.map((word, i) => (
                 <span key={word}>
                   <span style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 38, fontWeight: 700, color: COLORS.ink }}>{word}</span>
-                  {i < threeWords.length - 1 && <span style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 32, color: COLORS.accent, margin: '0 14px' }}>·</span>}
+                  {i < threeWords.length - 1 && <span className="word-divider" style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 32, color: COLORS.accent, margin: '0 14px' }}>·</span>}
                 </span>
               ))}
             </div>
