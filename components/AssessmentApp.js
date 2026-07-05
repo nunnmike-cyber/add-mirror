@@ -374,8 +374,10 @@ export default function AssessmentApp() {
       const storedToken = localStorage.getItem('adhd_mirror_unlocked');
       if (storedToken) {
         setUnlocked(true);
-        restoreSavedState();
       }
+      // Restore progress for everyone — so a refresh or accidental tab close
+      // mid-test doesn't wipe someone's answers.
+      restoreSavedState();
       setCheckingToken(false);
     }
   }, [searchParams]);
@@ -386,6 +388,20 @@ export default function AssessmentApp() {
     localStorage.setItem('adhd_mirror_answers', JSON.stringify(answers));
     localStorage.setItem('adhd_mirror_context', JSON.stringify(context));
   };
+
+  // ── Autosave progress continuously ──
+  // Runs whenever answers, context, or position change (but not until any
+  // previously saved state has been restored, so we never overwrite good data
+  // with the empty initial state). This means a refresh mid-test resumes where
+  // the person left off, and the paid report page can always find the answers.
+  useEffect(() => {
+    if (checkingToken) return;
+    try {
+      localStorage.setItem('adhd_mirror_section', sectionIndex.toString());
+      localStorage.setItem('adhd_mirror_answers', JSON.stringify(answers));
+      localStorage.setItem('adhd_mirror_context', JSON.stringify(context));
+    } catch (_) {}
+  }, [answers, context, sectionIndex, checkingToken]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
